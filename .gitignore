@@ -1,0 +1,15 @@
+# Django
+hydrotechDjango_core/backend/venv/
+hydrotechDjango_core/backend/__pycache__/
+hydrotechDjango_core/backend/*.pyc
+hydrotechDjango_core/backend/db.sqlite3
+hydrotechDjango_core/backend/.env
+
+# Vue
+hydrotech-frontend/node_modules/
+hydrotech-frontend/hydrotech-vue/node_modules/
+hydrotech-frontend/dist/
+hydrotech-frontend/.env
+
+# Mac
+.DS_Store
