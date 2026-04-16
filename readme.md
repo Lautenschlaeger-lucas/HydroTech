@@ -192,14 +192,4 @@ HydroTech/
 └── .gitignore
 ```
 
----
 
-## 🛠️ Painel Administrativo
-
-Acesse o painel admin do Django em:
-
-```
-http://127.0.0.1:8000/admin/
-```
-
-Use as credenciais do superusuário criado anteriormente.
