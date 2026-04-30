@@ -426,7 +426,7 @@ const initCharts = () => {
       chart.update()
     })
     lastUpdate.value = newLabel
-  }, 30000)
+  }, 10000)
 }
 
 onMounted(() => {
