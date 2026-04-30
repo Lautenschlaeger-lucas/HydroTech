@@ -48,9 +48,10 @@
           <label for="rio-risco">Risco de Inundação</label>
           <select id="rio-risco" v-model="form.risco_inundacao">
             <option value="">Selecione o nível...</option>
-            <option value="baixo">🟢 Baixo</option>
-            <option value="médio">🟡 Médio</option>
-            <option value="alto">🔴 Alto</option>
+            <option value="1">🟢 Baixo</option>
+            <option value="2">🟡 Médio</option>
+            <option value="3">🔴 Alto</option>
+            <option value="4">🔴 Muito Alto</option>
           </select>
         </div>
       </div>
@@ -112,7 +113,7 @@
               <td>
                 <span class="badge" :class="getBadgeClass(rio.risco_inundacao)">
                   <span class="badge-dot"></span>
-                  {{ rio.risco_inundacao }}
+                  {{ getRiskLabel(rio.risco_inundacao) }}
                 </span>
               </td>
               <td class="td-actions">
@@ -161,11 +162,13 @@ const save = async () => {
   }
   saving.value = true
   try {
+    const data = { ...form.value }
+    data.risco_inundacao = parseInt(data.risco_inundacao)
     if (form.value.id) {
-      await api.updateRio(form.value.id, form.value)
+      await api.updateRio(form.value.id, data)
       toast?.success('Rio atualizado', `"${form.value.nome}" foi atualizado com sucesso.`)
     } else {
-      await api.createRio(form.value)
+      await api.createRio(data)
       toast?.success('Rio cadastrado', `"${form.value.nome}" foi adicionado ao monitoramento.`)
     }
     reset()
@@ -206,10 +209,15 @@ const reset = () => {
 }
 
 const getBadgeClass = (risco) => {
-  const r = risco?.toLowerCase()
-  if (r === 'alto') return 'badge--high'
-  if (r === 'médio') return 'badge--medium'
+  if (risco === 1) return 'badge--low'
+  if (risco === 2) return 'badge--medium'
+  if (risco === 3 || risco === 4) return 'badge--high'
   return 'badge--low'
+}
+
+const getRiskLabel = (risco) => {
+  const labels = { 1: 'Baixo', 2: 'Médio', 3: 'Alto', 4: 'Muito Alto' }
+  return labels[risco] || 'Desconhecido'
 }
 
 onMounted(load)

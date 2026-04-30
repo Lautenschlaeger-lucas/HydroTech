@@ -148,7 +148,7 @@
               <td>
                 <span class="badge" :class="getBadgeClass(rio.risco_inundacao)">
                   <span class="badge-dot"></span>
-                  {{ rio.risco_inundacao }}
+                  {{ getRiskLabel(rio.risco_inundacao) }}
                 </span>
               </td>
             </tr>
@@ -166,6 +166,7 @@ import Chart from 'chart.js/auto'
 
 const chartCanvases = ref({})
 let chartInstances = {}
+let chartLevels = {} // Armazenar níveis de emergência por rio
 let chartInterval = null
 
 const setChartRef = (el, id) => {
@@ -179,12 +180,34 @@ const rios = ref([])
 const loading = ref(true)
 const lastUpdate = ref('')
 
+const normalizeRisk = (risco) => {
+  if (typeof risco === 'number') return risco
+  if (typeof risco === 'string') {
+    const lower = risco.toLowerCase().trim()
+    if (lower === 'baixo') return 1
+    if (lower === 'médio' || lower === 'medio') return 2
+    if (lower === 'alto') return 3
+    if (lower === 'muito alto' || lower === 'muitoalto') return 4
+    const parsed = parseInt(lower, 10)
+    return Number.isNaN(parsed) ? null : parsed
+  }
+  return null
+}
+
+const getRiskLabel = (risco) => {
+  const value = normalizeRisk(risco)
+  return value === 1 ? 'Baixo' : value === 2 ? 'Médio' : value === 3 ? 'Alto' : value === 4 ? 'Muito Alto' : 'Desconhecido'
+}
+
 const riosAltoRisco = computed(() =>
-  rios.value.filter(r => r.risco_inundacao?.toLowerCase() === 'alto').length
+  rios.value.filter(r => {
+    const value = normalizeRisk(r.risco_inundacao)
+    return value === 3 || value === 4
+  }).length
 )
 
 const riosMedioRisco = computed(() =>
-  rios.value.filter(r => r.risco_inundacao?.toLowerCase() === 'médio').length
+  rios.value.filter(r => normalizeRisk(r.risco_inundacao) === 2).length
 )
 
 const riskLabel = computed(() => {
@@ -200,9 +223,9 @@ const riskLevel = computed(() => {
 })
 
 const getBadgeClass = (risco) => {
-  const r = risco?.toLowerCase()
-  if (r === 'alto') return 'badge--high'
-  if (r === 'médio') return 'badge--medium'
+  const value = normalizeRisk(risco)
+  if (value === 3 || value === 4) return 'badge--high'
+  if (value === 2) return 'badge--medium'
   return 'badge--low'
 }
 
@@ -255,6 +278,13 @@ const initCharts = () => {
     const atencaoLevel = baseGeral + 0.6
     const alertaLevel = baseGeral + 0.9
     const emergenciaLevel = baseGeral + 1.2
+
+    // Armazenar os níveis para uso no setInterval
+    chartLevels[rio.id] = {
+      atencaoLevel,
+      alertaLevel,
+      emergenciaLevel
+    }
 
     const emergenciaData = Array.from({ length: 15 }, () => emergenciaLevel.toFixed(2))
     const alertaData = Array.from({ length: 15 }, () => alertaLevel.toFixed(2))
@@ -353,7 +383,7 @@ const initCharts = () => {
     const now = new Date()
     const newLabel = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute:'2-digit', second:'2-digit' })
 
-    Object.values(chartInstances).forEach(chart => {
+    Object.entries(chartInstances).forEach(([rioId, chart]) => {
       const mainDataset = chart.data.datasets[0]
       const emergenciaDataset = chart.data.datasets[1]
       const alertaDataset = chart.data.datasets[2]
@@ -361,9 +391,22 @@ const initCharts = () => {
 
       const lastValue = parseFloat(mainDataset.data.slice(-1)[0])
       
-      // Variação de -0.15 a +0.20 metros
+      // Variação natural entre -0.15 e +0.20 metros
       let newValue = lastValue + (Math.random() * 0.35 - 0.15)
       if (newValue < 0) newValue = Math.abs(newValue)
+
+      // Obter os níveis armazenados para este rio
+      const levels = chartLevels[rioId] || { emergenciaLevel: 2, atencaoLevel: 1.5 }
+      const { emergenciaLevel, atencaoLevel } = levels
+
+      // Limitar o excesso acima do nível de emergência sem travar a simulação
+      const maxValue = emergenciaLevel + 0.25
+      const minValue = Math.max(0, atencaoLevel - 0.2)
+      if (newValue > maxValue) {
+        newValue = maxValue - Math.random() * 0.06
+      } else if (newValue < minValue) {
+        newValue = minValue + Math.random() * 0.05
+      }
 
       chart.data.labels.push(newLabel)
       mainDataset.data.push(newValue.toFixed(2))
@@ -383,7 +426,7 @@ const initCharts = () => {
       chart.update()
     })
     lastUpdate.value = newLabel
-  }, 2000)
+  }, 30000)
 }
 
 onMounted(() => {
@@ -393,6 +436,7 @@ onMounted(() => {
 onUnmounted(() => {
   if (chartInterval) clearInterval(chartInterval)
   Object.values(chartInstances).forEach(chart => chart.destroy())
+  chartLevels = {}
 })
 </script>
 
