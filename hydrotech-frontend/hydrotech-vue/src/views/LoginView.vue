@@ -68,6 +68,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '../services/api'
 
 const router = useRouter()
 const form = ref({ email: '', senha: '' })
@@ -83,18 +84,23 @@ const login = async () => {
   loading.value = true
   error.value = ''
 
-  setTimeout(() => {
-    try {
-      localStorage.setItem('user_token', 'token_falso_12345')
-      localStorage.setItem('user_name', 'Administrador')
-      window.dispatchEvent(new Event('storage-update'))
-      router.push('/dashboard')
-    } catch (err) {
-      error.value = 'Erro ao realizar login.'
-    } finally {
-      loading.value = false
-    }
-  }, 1000)
+  try {
+    const response = await api.login({
+      email: form.value.email,
+      senha: form.value.senha,
+    })
+    const { access, refresh, usuario } = response.data
+
+    localStorage.setItem('user_token', access)
+    localStorage.setItem('refresh_token', refresh)
+    localStorage.setItem('user_name', usuario.nome)
+    window.dispatchEvent(new Event('storage-update'))
+    router.push('/dashboard')
+  } catch (err) {
+    error.value = err.response?.data?.detail || 'Erro ao realizar login.'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

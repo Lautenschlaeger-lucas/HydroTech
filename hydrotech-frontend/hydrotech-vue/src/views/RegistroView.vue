@@ -158,15 +158,22 @@ const handleRegistro = async () => {
       nome: form.value.nome,
       email: form.value.email,
       senha: form.value.senha,
-      data_nascimento: form.value.data_nascimento
+      data_nascimento: form.value.data_nascimento,
     }
-    await api.createUsuario(data)
+    const response = await api.register(data)
+    const { access, refresh, usuario } = response.data
+
+    localStorage.setItem('user_token', access)
+    localStorage.setItem('refresh_token', refresh)
+    localStorage.setItem('user_name', usuario.nome)
+    window.dispatchEvent(new Event('storage-update'))
     success.value = 'Conta criada com sucesso! Redirecionando...'
+
     setTimeout(() => {
-      router.push('/login')
-    }, 2000)
+      router.push('/dashboard')
+    }, 1500)
   } catch (err) {
-    error.value = 'Ocorreu um erro ao criar a conta. Verifique o servidor.'
+    error.value = err.response?.data?.detail || 'Ocorreu um erro ao criar a conta. Verifique o servidor.'
   } finally {
     loading.value = false
   }

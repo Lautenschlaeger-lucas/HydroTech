@@ -105,6 +105,7 @@ const toggleTheme = () => {
 
 const logout = () => {
   localStorage.removeItem('user_token')
+  localStorage.removeItem('refresh_token')
   localStorage.removeItem('user_name')
   checkLogin()
   closeMobile()
