@@ -149,7 +149,7 @@ const form = ref({ id: null, nome: '', cidade: '', estado: '', risco_inundacao: 
 const load = async () => {
   try {
     const res = await api.getRios()
-    rios.value = res.data
+    rios.value = Array.isArray(res.data) ? res.data : res.data.results || []
   } catch (err) {
     toast?.error('Erro ao carregar', 'Não foi possível carregar a lista de rios.')
   }

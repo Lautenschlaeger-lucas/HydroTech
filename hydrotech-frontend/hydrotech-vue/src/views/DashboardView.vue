@@ -233,7 +233,7 @@ const load = async () => {
   loading.value = true
   try {
     const res = await api.getRios()
-    rios.value = res.data
+    rios.value = Array.isArray(res.data) ? res.data : res.data.results || []
   } catch (err) {
     console.error('Erro ao carregar rios:', err)
   } finally {
