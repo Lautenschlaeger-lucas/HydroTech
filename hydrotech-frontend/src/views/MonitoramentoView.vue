@@ -51,13 +51,14 @@
     </div>
 
     <main v-else class="mon-main">
-      <!-- Agrupado por Estado -->
+        <!-- Agrupado por Estado -->
       <div v-for="estado in estadosFiltrados" :key="estado" class="estado-section">
-        <div class="estado-header">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          {{ estado }}
-          <span class="estado-count">{{ riosPorEstado[estado].length }} rios</span>
-        </div>
+        <template v-if="riosPorEstado[estado]">
+          <div class="estado-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ estado }}
+            <span class="estado-count">{{ riosPorEstado[estado].length }} rios</span>
+          </div>
 
         <!-- Rios do Estado -->
         <div v-for="rio in riosPorEstado[estado]" :key="rio.id" class="rio-block">
@@ -166,11 +167,11 @@
                   <div>
                     <h3 class="chart-card-title">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                      {{ p.descricao.length > 40 ? p.descricao.substring(0,40)+'…' : p.descricao }}
+                      {{ p.descricao ? (p.descricao.length > 40 ? p.descricao.substring(0,40)+'…' : p.descricao) : 'Sem descrição' }}
                     </h3>
                     <p class="chart-card-sub">
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-                      {{ rio.nome }} · {{ p.descricao.length > 45 ? p.descricao.substring(0,45)+'…' : p.descricao }}
+                      {{ rio.nome }} · {{ p.descricao ? (p.descricao.length > 45 ? p.descricao.substring(0,45)+'…' : p.descricao) : 'Sem descrição' }}
                     </p>
                   </div>
                   <div style="display: flex; gap: 8px; align-items: center;">
@@ -219,6 +220,7 @@
             </div>
           </div>
         </div>
+        </template>
       </div>
 
       <div v-if="estadosFiltrados.length === 0 && !loading" class="mon-state">Nenhum rio encontrado.</div>
