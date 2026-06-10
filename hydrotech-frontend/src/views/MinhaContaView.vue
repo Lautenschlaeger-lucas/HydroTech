@@ -250,25 +250,37 @@ const handleSave = async () => {
 }
 
 const removeFav = async (id) => {
+  const wasFav = favs.value.has(id)
   favs.value.delete(id)
   localStorage.setItem('ht_favs', JSON.stringify([...favs.value]))
-  try { await api.toggleFavorite(id) } catch (e) {}
+  try { await api.toggleFavorite(id) } catch (e) {
+    if (wasFav) favs.value.add(id)
+    localStorage.setItem('ht_favs', JSON.stringify([...favs.value]))
+  }
 }
 
 const removeAlert = async (id) => {
+  const wasAlert = alerts.value.has(id)
   alerts.value.delete(id)
   localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
-  try { await api.toggleAlert(id) } catch (e) {}
+  try { await api.toggleAlert(id) } catch (e) {
+    if (wasAlert) alerts.value.add(id)
+    localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
+  }
 }
 
 const toggleAlertInline = async (id) => {
-  if (alerts.value.has(id)) {
+  const wasAlert = alerts.value.has(id)
+  if (wasAlert) {
     alerts.value.delete(id)
   } else {
     alerts.value.add(id)
   }
   localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
-  try { await api.toggleAlert(id) } catch (e) {}
+  try { await api.toggleAlert(id) } catch (e) {
+    wasAlert ? alerts.value.add(id) : alerts.value.delete(id)
+    localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
+  }
 }
 
 const goToMonitoramento = (id) => {

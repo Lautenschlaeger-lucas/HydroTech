@@ -235,8 +235,8 @@ import api from '../services/api'
 import Chart from 'chart.js/auto'
 
 const route = useRoute()
-const userData = JSON.parse(localStorage.getItem('user_data') || '{}')
-const isDefesaCivil = computed(() => !!userData.is_defesa_civil)
+const userData = ref(JSON.parse(localStorage.getItem('user_data') || '{}'))
+const isDefesaCivil = computed(() => !!userData.value.is_defesa_civil)
 const isLoggedIn = computed(() => !!localStorage.getItem('user_token'))
 
 const loading = ref(true)
@@ -301,14 +301,27 @@ const toggleFav = async id => {
   if (!wasFav) { favFilter.value = true }
   else if (next.size === 0) { favFilter.value = false }
   if (localStorage.getItem('user_token')) {
-    try { await api.toggleFavorite(id) } catch (e) { console.error('Erro ao favoritar na API:', e) }
+    try { await api.toggleFavorite(id) } catch (e) {
+      console.error('Erro ao favoritar na API:', e)
+      favs.value = new Set(JSON.parse(localStorage.getItem('ht_favs') || '[]'))
+      wasFav ? favs.value.add(id) : favs.value.delete(id)
+      favs.value = new Set(favs.value)
+      localStorage.setItem('ht_favs', JSON.stringify([...favs.value]))
+    }
   }
 }
 const toggleAlert = async id => {
+  const wasAlert = alerts.value.has(id)
   isAlert(id) ? alerts.value.delete(id) : alerts.value.add(id);
   localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]));
   if (localStorage.getItem('user_token')) {
-    try { await api.toggleAlert(id) } catch (e) { console.error('Erro ao alterar alerta na API:', e) }
+    try { await api.toggleAlert(id) } catch (e) {
+      console.error('Erro ao alterar alerta na API:', e)
+      alerts.value = new Set(JSON.parse(localStorage.getItem('ht_alerts') || '[]'))
+      wasAlert ? alerts.value.add(id) : alerts.value.delete(id)
+      alerts.value = new Set(alerts.value)
+      localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
+    }
   }
 }
 
@@ -521,6 +534,25 @@ const tick = () => {
   })
 }
 
+const syncFavsAndAlerts = async () => {
+  if (!localStorage.getItem('user_token')) return
+  try {
+    const res = await api.me()
+    userData.value = res.data
+    localStorage.setItem('user_data', JSON.stringify(res.data))
+    if (res.data.favoritos) {
+      favs.value = new Set(res.data.favoritos)
+      localStorage.setItem('ht_favs', JSON.stringify([...favs.value]))
+    }
+    if (res.data.alertas) {
+      alerts.value = new Set(res.data.alertas)
+      localStorage.setItem('ht_alerts', JSON.stringify([...alerts.value]))
+    }
+  } catch (e) {
+    console.error('Erro ao sincronizar favoritos/alertas:', e)
+  }
+}
+
 onMounted(async () => {
   try {
     const res = await api.getRiosPublico()
@@ -535,8 +567,9 @@ onMounted(async () => {
   } catch(e) {
     console.error(e)
   } finally {
-    loading.value = false   // <-- primeiro renderiza os canvas
+    loading.value = false
   }
+  await syncFavsAndAlerts()
   await nextTick()
   ticker = setInterval(tick, 10000)
 
