@@ -1,7 +1,7 @@
 const https = require('https');
 
 // Token de acesso da API do Whapi.Cloud (Sandbox)
-const WHAPI_TOKEN = 'YuOAsd5Lgg3bOMZOgueq5KRMB8Zhzlwu';
+const WHAPI_TOKEN = 'FkpTR0248mbkuRZDc8HpqUsusJmHlxJg';
 
 // Nível crítico (X) para disparar o alerta
 const NIVEL_CRITICO = 5.0;
@@ -9,10 +9,10 @@ const NIVEL_CRITICO = 5.0;
 // Lista de contatos autorizados no Sandbox
 // Formato: DDI + DDD + Número (ex: 5511999999999)
 const CONTATOS = [
-  '',
   '5519992544874',
   '5519997490041',
-  ''
+  '5519996161210',
+  '5519996290762'
 ];
 
 /**
