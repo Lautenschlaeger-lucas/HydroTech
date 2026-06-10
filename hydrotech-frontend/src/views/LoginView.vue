@@ -109,8 +109,9 @@
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
-                <input id="login-email" v-model="form.email" type="email" placeholder=" " autocomplete="email" @input="clearError('email')"/>
+                <input id="login-email" v-model="form.email" type="email" placeholder=" " autocomplete="email" :aria-invalid="errors.email" :aria-describedby="errors.email ? 'login-error' : undefined" @input="clearError('email')" @blur="validateField('email')"/>
               </div>
+              <p v-if="errors.email" class="field-error">Informe um e-mail válido.</p>
             </div>
 
             <div v-else class="form-group">
@@ -119,8 +120,9 @@
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
-                <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" @focus="clearError('telefone')"/>
+                <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" :aria-invalid="errors.telefone" :aria-describedby="errors.telefone ? 'login-error' : undefined" @focus="clearError('telefone')" @blur="validateField('telefone')"/>
               </div>
+              <p v-if="errors.telefone" class="field-error">Informe um telefone válido.</p>
             </div>
 
             <div class="form-group">
@@ -129,12 +131,13 @@
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input id="login-password" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder=" " autocomplete="current-password" @input="clearError('senha')"/>
+                <input id="login-password" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder=" " autocomplete="current-password" :aria-invalid="errors.senha" :aria-describedby="errors.senha ? 'login-error' : undefined" @input="clearError('senha')" @blur="validateField('senha')"/>
                 <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" tabindex="-1" :aria-label="showSenha ? 'Ocultar senha' : 'Mostrar senha'">
                   <svg v-if="!showSenha" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
               </div>
+              <p v-if="errors.senha" class="field-error">A senha é obrigatória.</p>
             </div>
 
             <div class="form-options">
@@ -148,7 +151,7 @@
               <a href="#" class="forgot-link" @click.prevent>Esqueceu a senha?</a>
             </div>
 
-            <p class="error-msg" v-if="error" :key="error">
+            <p class="error-msg" v-if="error" :key="error" id="login-error" role="alert" aria-live="polite">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
@@ -201,6 +204,18 @@ const clearError = (field) => {
   if (error.value) error.value = ''
 }
 
+const validateField = (field) => {
+  if (field === 'email') {
+    if (!form.value.email) errors.value.email = true
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) errors.value.email = true
+  } else if (field === 'telefone') {
+    if (!form.value.telefone) errors.value.telefone = true
+    else if (form.value.telefone.replace(/\D/g, '').length < 10) errors.value.telefone = true
+  } else if (field === 'senha') {
+    if (!form.value.senha) errors.value.senha = true
+  }
+}
+
 const onPhoneInput = (e, field) => {
   let digits = e.target.value.replace(/\D/g, '').slice(0, 11)
   let formatted = ''
@@ -214,19 +229,25 @@ const onPhoneInput = (e, field) => {
 
 const validate = () => {
   let valid = true
-  if (loginMode.value === 'email') {
-    if (!form.value.email) { errors.value.email = true; valid = false }
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) { errors.value.email = true; valid = false }
-  } else {
-    if (!form.value.telefone) { errors.value.telefone = true; valid = false }
-    else if (form.value.telefone.replace(/\D/g, '').length < 10) { errors.value.telefone = true; valid = false }
-  }
-  if (!form.value.senha) { errors.value.senha = true; valid = false }
+  const field = loginMode.value === 'email' ? 'email' : 'telefone'
+  validateField(field)
+  validateField('senha')
+  if (errors.value[field]) valid = false
+  if (errors.value.senha) valid = false
   return valid
 }
 
+const focusFirstInvalid = () => {
+  const field = loginMode.value === 'email' ? 'email' : 'telefone'
+  const id = errors.value[field] ? field : errors.value.senha ? 'senha' : null
+  if (id) {
+    const el = document.getElementById(`login-${id === 'senha' ? 'password' : id}`)
+    if (el) setTimeout(() => el.focus(), 100)
+  }
+}
+
 const login = async () => {
-  if (!validate()) return
+  if (!validate()) { focusFirstInvalid(); return }
   loading.value = true; error.value = ''
   try {
     const payload = { senha: form.value.senha }
@@ -739,6 +760,22 @@ onMounted(() => {
   40% { transform: translateX(6px); }
   60% { transform: translateX(-4px); }
   80% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-msg { animation: none; }
+  .login-card { animation: none; }
+  .status-dot { animation: none; }
+  .wave { animation: none; }
+  .wave--slow, .wave--med, .wave--fast { animation: none; }
+}
+
+.field-error {
+  font-size: 0.72rem;
+  color: var(--risk-high);
+  margin-top: 2px;
+  padding-left: 2px;
+  font-weight: 500;
 }
 
 /* Login Button */
