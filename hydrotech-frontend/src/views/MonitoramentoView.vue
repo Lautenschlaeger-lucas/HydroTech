@@ -456,7 +456,7 @@ const buildChart = (ponto) => {
 }
 
 // Whapi configuration (Sandbox)
-const WHAPI_TOKEN = 'YuOAsd5Lgg3bOMZOgueq5KRMB8Zhzlwu';
+const WHAPI_TOKEN = 'FkpTR0248mbkuRZDc8HpqUsusJmHlxJg';
 const CONTATOS = ['5519998534990', '5519997490041'];
 
 const enviarMensagemWhatsApp = async (to, message) => {
