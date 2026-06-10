@@ -1,45 +1,89 @@
 <template>
   <div class="login-page">
+    <div class="mesh-bg"></div>
+
     <div class="login-split">
-      <!-- Left Panel -->
       <div class="login-panel-left">
+        <!-- Brand -->
+        <div class="panel-brand">
+          <div class="panel-logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+            </svg>
+          </div>
+          <span>HydroTech</span>
+        </div>
+
         <div class="panel-content">
           <div class="status-chip">
             <span class="status-dot"></span>
             Sistema Operacional
           </div>
-          <h1>Sistema de Monitoramento<br>Hidrológico</h1>
-          <p>Plataforma institucional de alta precisão para gestão de riscos de enchente e coordenação de infraestrutura crítica.</p>
+
+          <h1>Monitoramento<br/>Hidrológico</h1>
+          <p class="panel-desc">Plataforma institucional de alta precisão para gestão de riscos de enchente e coordenação de infraestrutura crítica.</p>
+
+          <!-- Metrics -->
+          <div class="panel-metrics">
+            <div class="metric-card">
+              <span class="metric-value">127</span>
+              <span class="metric-label">Rios monitorados</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-card">
+              <span class="metric-value">34</span>
+              <span class="metric-label">Cidades</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-card">
+              <span class="metric-value">24/7</span>
+              <span class="metric-label">Tempo real</span>
+            </div>
+          </div>
+
+          <!-- Features -->
           <div class="panel-features">
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
               <span>Monitoramento em tempo real</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
               <span>Mapeamento de pontos de risco</span>
             </div>
             <div class="feature-item">
               <div class="feature-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </div>
-              <span>Alertas instantâneos</span>
+              <span>Alertas instantâneos via WhatsApp</span>
             </div>
           </div>
         </div>
+
+        <!-- Animated Waves Footer -->
+        <div class="panel-waves" aria-hidden="true">
+          <svg class="wave wave--slow" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path d="M0,60 C360,120 720,0 1440,60 L1440,120 L0,120 Z" fill="var(--accent)" opacity="0.08"/>
+          </svg>
+          <svg class="wave wave--med" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path d="M0,80 C360,20 720,100 1440,40 L1440,120 L0,120 Z" fill="var(--accent)" opacity="0.05"/>
+          </svg>
+          <svg class="wave wave--fast" viewBox="0 0 1440 120" preserveAspectRatio="none">
+            <path d="M0,90 C240,40 480,110 720,60 C960,10 1200,100 1440,50 L1440,120 L0,120 Z" fill="var(--accent)" opacity="0.03"/>
+          </svg>
+        </div>
       </div>
 
-      <!-- Right Form -->
       <div class="login-panel-right">
         <div class="login-card">
           <div class="login-card-header">
@@ -47,56 +91,64 @@
             <p>Insira suas credenciais para continuar</p>
           </div>
 
-          <!-- Login Mode Toggle -->
           <div class="login-mode-toggle">
-            <button :class="{ active: loginMode === 'email' }" @click="loginMode = 'email'">
+            <button :class="{ active: loginMode === 'email' }" @click="loginMode = 'email'" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
               E-mail
             </button>
-            <button :class="{ active: loginMode === 'telefone' }" @click="loginMode = 'telefone'">
+            <button :class="{ active: loginMode === 'telefone' }" @click="loginMode = 'telefone'" type="button">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               Telefone
             </button>
           </div>
 
-          <form @submit.prevent="login" class="login-form">
-            <!-- Email field -->
+          <form @submit.prevent="login" class="login-form" novalidate>
             <div v-if="loginMode === 'email'" class="form-group">
-              <label for="login-email">E-mail</label>
-              <div class="input-wrapper">
+              <label for="login-email" :class="{ float: form.email }">E-mail</label>
+              <div class="input-wrapper" :class="{ filled: form.email, error: errors.email }">
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                 </svg>
-                <input id="login-email" v-model="form.email" type="email" placeholder="seu@email.com" autocomplete="email"/>
+                <input id="login-email" v-model="form.email" type="email" placeholder=" " autocomplete="email" @input="clearError('email')"/>
               </div>
             </div>
 
-            <!-- Phone field -->
             <div v-else class="form-group">
-              <label for="login-phone">Telefone</label>
-              <div class="input-wrapper">
+              <label for="login-phone" :class="{ float: form.telefone }">Telefone</label>
+              <div class="input-wrapper" :class="{ filled: form.telefone, error: errors.telefone }">
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
                 </svg>
-                <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder="(11) 99999-9999" autocomplete="tel"/>
+                <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" @focus="clearError('telefone')"/>
               </div>
             </div>
 
             <div class="form-group">
-              <label for="login-password">Senha</label>
-              <div class="input-wrapper">
+              <label for="login-password" :class="{ float: form.senha }">Senha</label>
+              <div class="input-wrapper" :class="{ filled: form.senha, error: errors.senha }">
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
-                <input id="login-password" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder="••••••••" autocomplete="current-password"/>
-                <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" tabindex="-1">
+                <input id="login-password" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder=" " autocomplete="current-password" @input="clearError('senha')"/>
+                <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" tabindex="-1" :aria-label="showSenha ? 'Ocultar senha' : 'Mostrar senha'">
                   <svg v-if="!showSenha" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
               </div>
             </div>
 
-            <p class="error-msg" v-if="error">
+            <div class="form-options">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="remember" class="checkbox-input"/>
+                <span class="checkbox-custom">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Lembrar-me
+              </label>
+              <a href="#" class="forgot-link" @click.prevent>Esqueceu a senha?</a>
+            </div>
+
+            <p class="error-msg" v-if="error" :key="error">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
               </svg>
@@ -104,15 +156,20 @@
             </p>
 
             <button class="btn-login" type="submit" :disabled="loading">
-              <svg v-if="loading" class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32">
-                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
-                </circle>
-              </svg>
-              <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-              {{ loading ? 'Autenticando...' : 'Acessar Sistema' }}
+              <span class="btn-content" :class="{ hidden: loading }">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Acessar Sistema
+              </span>
+              <span class="btn-loading" :class="{ visible: loading }">
+                <svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10" stroke-dasharray="32" stroke-dashoffset="32">
+                    <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="0.8s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+                Autenticando...
+              </span>
             </button>
           </form>
 
@@ -126,16 +183,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
 const router = useRouter()
 const loginMode = ref('email')
 const form = ref({ email: '', telefone: '', senha: '' })
+const errors = ref({ email: false, telefone: false, senha: false })
 const loading = ref(false)
 const error = ref('')
 const showSenha = ref(false)
+const remember = ref(true)
+
+const clearError = (field) => {
+  errors.value[field] = false
+  if (error.value) error.value = ''
+}
 
 const onPhoneInput = (e, field) => {
   let digits = e.target.value.replace(/\D/g, '').slice(0, 11)
@@ -148,9 +212,21 @@ const onPhoneInput = (e, field) => {
   e.target.value = formatted
 }
 
+const validate = () => {
+  let valid = true
+  if (loginMode.value === 'email') {
+    if (!form.value.email) { errors.value.email = true; valid = false }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) { errors.value.email = true; valid = false }
+  } else {
+    if (!form.value.telefone) { errors.value.telefone = true; valid = false }
+    else if (form.value.telefone.replace(/\D/g, '').length < 10) { errors.value.telefone = true; valid = false }
+  }
+  if (!form.value.senha) { errors.value.senha = true; valid = false }
+  return valid
+}
+
 const login = async () => {
-  const credential = loginMode.value === 'email' ? form.value.email : form.value.telefone
-  if (!credential || !form.value.senha) { error.value = 'Preencha todos os campos.'; return }
+  if (!validate()) return
   loading.value = true; error.value = ''
   try {
     const payload = { senha: form.value.senha }
@@ -168,61 +244,89 @@ const login = async () => {
     if (usuario.favoritos) localStorage.setItem('ht_favs', JSON.stringify(usuario.favoritos))
     if (usuario.alertas) localStorage.setItem('ht_alerts', JSON.stringify(usuario.alertas))
     window.dispatchEvent(new Event('storage-update'))
-    if (usuario.deve_alterar_senha) {
-      router.push('/minha-conta')
-    } else {
-      router.push('/')
-    }
+    router.push(usuario.deve_alterar_senha ? '/minha-conta' : '/')
   } catch (err) {
-    error.value = err.response?.data?.detail || 'Credenciais inválidas.'
+    error.value = err.response?.data?.detail || 'Credenciais inválidas. Verifique os dados e tente novamente.'
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  if (remember.value) {
+    const saved = localStorage.getItem('login_email')
+    if (saved) form.value.email = saved
+  }
+})
 </script>
 
 <style scoped>
-.login-page { min-height: 100vh; background: var(--bg-primary); }
+.login-page {
+  min-height: 100vh;
+  background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+}
+
+.mesh-bg {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(14,165,233,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(56,189,248,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(2,132,199,0.03) 0%, transparent 50%);
+}
 
 .login-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
   min-height: 100vh;
+  position: relative;
+  z-index: 1;
 }
 
-/* Left Panel */
+/* ── Left Panel ── */
 .login-panel-left {
+  position: relative;
   background: var(--bg-secondary);
   border-right: 1px solid var(--border);
-  padding: 40px 48px;
+  padding: 32px 40px;
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  overflow: hidden;
 }
 
 .panel-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--text-primary);
+  letter-spacing: -0.02em;
 }
 
 .panel-logo {
-  width: 34px; height: 34px;
+  width: 32px; height: 32px;
   border-radius: var(--radius-sm);
   background: var(--accent-gradient);
   display: flex; align-items: center; justify-content: center;
   color: white;
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.25);
 }
 
 .panel-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   flex: 1;
   justify-content: center;
+  max-width: 440px;
+  position: relative;
+  z-index: 2;
 }
 
 .status-chip {
@@ -234,7 +338,7 @@ const login = async () => {
   background: var(--status-active-bg);
   border: 1px solid rgba(16, 185, 129, 0.2);
   color: var(--status-active);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -242,37 +346,84 @@ const login = async () => {
 }
 
 .status-dot {
-  width: 7px; height: 7px;
+  width: 6px; height: 6px;
   border-radius: 50%;
   background: var(--status-active);
   animation: pulse 2s infinite;
 }
 
 .panel-content h1 {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.panel-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 380px;
+}
+
+/* Metrics */
+.panel-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(4px);
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metric-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
   letter-spacing: -0.02em;
 }
 
-.panel-content p {
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-  line-height: 1.7;
+.metric-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
 }
 
-.panel-features { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
+.metric-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--border);
+}
+
+/* Features */
+.panel-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
 .feature-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 0.85rem;
+  gap: 10px;
+  font-size: 0.82rem;
   color: var(--text-secondary);
 }
 
 .feature-icon {
-  width: 28px; height: 28px;
+  width: 24px; height: 24px;
   border-radius: var(--radius-sm);
   background: var(--accent-soft);
   color: var(--accent);
@@ -280,12 +431,48 @@ const login = async () => {
   flex-shrink: 0;
 }
 
-/* Right Form */
+/* Animated Waves */
+.panel-waves {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+}
+
+.wave--slow {
+  animation: waveSlide 12s linear infinite;
+}
+.wave--med {
+  animation: waveSlide 8s linear infinite reverse;
+}
+.wave--fast {
+  animation: waveSlide 5s linear infinite;
+}
+
+@keyframes waveSlide {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── Right Panel ── */
 .login-panel-right {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 48px;
+  position: relative;
+  z-index: 2;
 }
 
 .login-card {
@@ -294,18 +481,25 @@ const login = async () => {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  animation: fadeInUp 0.4s ease-out;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 36px 32px;
+  box-shadow: var(--shadow-xl);
+  animation: fadeInUp 0.45s ease-out;
 }
 
 .login-card-header h2 {
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .login-card-header p {
   color: var(--text-secondary);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   margin-top: 6px;
 }
 
@@ -313,78 +507,221 @@ const login = async () => {
 .login-mode-toggle {
   display: flex;
   gap: 0;
-  background: var(--bg-secondary, #f1f5f9);
+  background: var(--bg-tertiary);
   border-radius: var(--radius-md);
-  padding: 4px;
+  padding: 3px;
   border: 1px solid var(--border);
 }
+
 .login-mode-toggle button {
   flex: 1;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  padding: 10px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 16px;
   border-radius: calc(var(--radius-md) - 2px);
   border: none;
   background: transparent;
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+  font-family: inherit;
 }
+
 .login-mode-toggle button.active {
   background: var(--accent);
   color: white;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.3);
+  box-shadow: 0 2px 10px rgba(59, 130, 246, 0.35);
 }
+
 .login-mode-toggle button:not(.active):hover {
   color: var(--text-primary);
-  background: var(--bg-primary, rgba(0,0,0,0.05));
+  background: rgba(255,255,255,0.04);
 }
 
-.login-form { display: flex; flex-direction: column; gap: 16px; }
+/* ── Form ── */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
-.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  position: relative;
+}
 
 .form-group label {
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  transition: all 0.2s ease;
+  padding-left: 2px;
 }
 
-.input-wrapper { position: relative; display: flex; align-items: center; }
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: box-shadow 0.2s ease;
+  border-radius: var(--radius-md);
+}
+
+.input-wrapper:focus-within {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.input-wrapper.error:focus-within {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
 
 .input-icon {
-  position: absolute; left: 13px; top: 50%;
+  position: absolute;
+  left: 14px;
+  top: 50%;
   transform: translateY(-50%);
-  color: var(--text-muted); pointer-events: none;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 0.2s ease;
+  z-index: 1;
 }
 
-.input-wrapper input { padding-left: 40px; padding-right: 44px; }
+.input-wrapper:focus-within .input-icon {
+  color: var(--accent);
+}
 
-.btn-login {
-  display: flex; align-items: center; justify-content: center; gap: 9px;
-  width: 100%; padding: 13px;
+.input-wrapper.error .input-icon {
+  color: var(--risk-high);
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding: 12px 44px 12px 42px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--accent);
-  color: white;
-  font-weight: 700; font-size: 0.9rem;
-  border: 1px solid var(--accent-hover);
-  cursor: pointer; margin-top: 4px;
-  transition: all var(--transition-normal);
-  letter-spacing: 0.02em;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  font-family: inherit;
 }
 
-.btn-login:hover:not(:disabled) {
+.input-wrapper input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--bg-card);
+}
+
+.input-wrapper.error input {
+  border-color: rgba(220, 38, 38, 0.5);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.input-wrapper.error input:focus {
+  border-color: var(--risk-high);
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.3);
+}
+
+.input-wrapper input::placeholder {
+  color: transparent;
+}
+
+/* Password Toggle */
+.btn-toggle-pw {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  z-index: 1;
+}
+
+.btn-toggle-pw:hover {
+  color: var(--text-primary);
+  background: rgba(255,255,255,0.06);
+}
+
+/* Form Options */
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  display: none;
+}
+
+.checkbox-custom {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 2px solid var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-custom svg {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  color: white;
+}
+
+.checkbox-input:checked + .checkbox-custom {
   background: var(--accent);
   border-color: var(--accent);
-  box-shadow: var(--shadow-glow);
-  transform: translateY(-1px);
 }
 
-.btn-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.checkbox-input:checked + .checkbox-custom svg {
+  opacity: 1;
+}
 
+.checkbox-label:hover .checkbox-custom {
+  border-color: var(--accent);
+}
+
+.forgot-link {
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.forgot-link:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* Error Message */
 .error-msg {
   display: flex; align-items: center; gap: 8px;
   color: var(--risk-high);
@@ -393,45 +730,204 @@ const login = async () => {
   border-radius: var(--radius-md);
   font-size: 0.82rem; font-weight: 500;
   border: 1px solid rgba(220, 38, 38, 0.2);
+  animation: shakeIn 0.4s ease;
 }
 
-.login-card-footer { text-align: center; }
+@keyframes shakeIn {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
 
-.login-card-footer p { font-size: 0.85rem; color: var(--text-muted); }
-
-.login-card-footer a { color: var(--accent); font-weight: 600; text-decoration: none; }
-.login-card-footer a:hover { text-decoration: underline; }
-
-/* Password Toggle Button */
-.btn-toggle-pw {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
+/* Login Button */
+.btn-login {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--accent-gradient);
+  color: white;
+  font-weight: 700; font-size: 0.9rem;
   border: none;
-  color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: color 0.2s;
-}
-.btn-toggle-pw:hover {
-  color: var(--text-primary);
-  transform: translateY(-50%);
+  transition: all 0.25s ease;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  min-height: 48px;
 }
 
+.btn-login:hover:not(:disabled) {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.btn-login:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-login:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-content {
+  display: flex; align-items: center; gap: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.btn-loading {
+  display: flex; align-items: center; gap: 8px;
+  position: absolute;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.btn-content.hidden { opacity: 0; }
+.btn-loading.visible { opacity: 1; }
+
+/* Footer */
+.login-card-footer {
+  text-align: center;
+}
+
+.login-card-footer p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.login-card-footer a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.login-card-footer a:hover {
+  opacity: 0.7;
+  text-decoration: underline;
+}
+
+/* Animations */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .login-panel-left {
+    padding: 24px 28px;
+  }
+  .panel-content h1 {
+    font-size: 1.6rem;
+  }
+  .panel-metrics {
+    gap: 12px;
+    padding: 12px 16px;
+  }
+}
+
 @media (max-width: 768px) {
-  .login-split { grid-template-columns: 1fr; }
-  .login-panel-left { display: none; }
-  .login-panel-right { padding: 32px 24px; align-items: flex-start; padding-top: 48px; }
+  .login-split {
+    grid-template-columns: 1fr;
+  }
+
+  .login-panel-left {
+    padding: 20px 24px 60px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    min-height: auto;
+  }
+
+  .panel-content {
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 12px 0 0;
+  }
+
+  .panel-content h1 {
+    font-size: 1.4rem;
+  }
+
+  .panel-desc {
+    font-size: 0.8rem;
+  }
+
+  .panel-metrics {
+    display: none;
+  }
+
+  .panel-waves {
+    display: none;
+  }
+
+  .panel-features {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .feature-item {
+    font-size: 0.72rem;
+    gap: 6px;
+    background: rgba(255,255,255,0.03);
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+  }
+
+  .feature-icon {
+    width: 20px; height: 20px;
+  }
+
+  .login-panel-right {
+    padding: 24px 16px;
+    align-items: flex-start;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-panel-left {
+    padding: 16px 16px 48px;
+  }
+
+  .panel-content h1 {
+    font-size: 1.2rem;
+  }
+
+  .login-panel-right {
+    padding: 16px 12px;
+  }
+
+  .login-card {
+    padding: 20px 12px;
+    gap: 18px;
+  }
+
+  .login-mode-toggle button {
+    font-size: 0.72rem;
+    padding: 8px 10px;
+  }
+
+  .form-options {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
 }
 </style>
