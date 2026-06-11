@@ -5,14 +5,13 @@
       <div class="ambient-gradient"></div>
       <div class="ambient-grid"></div>
       <div class="ambient-topo"></div>
-      <div class="ambient-scanline"></div>
       <div class="ambient-orbs">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
       </div>
       <div class="ambient-particles">
-        <div v-for="i in 30" :key="i" class="particle" :style="particleStyle(i)"></div>
+        <div v-for="i in 12" :key="i" class="particle" :style="particleStyle(i)"></div>
       </div>
     </div>
 
@@ -21,7 +20,6 @@
       <svg class="wave-svg" viewBox="0 0 2880 160" preserveAspectRatio="none">
         <path class="wave-path wave-1" d="M0,80 C240,20 480,140 720,80 C960,20 1200,140 1440,80 C1680,20 1920,140 2160,80 C2400,20 2640,140 2880,80 L2880,160 L0,160 Z" />
         <path class="wave-path wave-2" d="M0,100 C360,40 720,160 1080,100 C1440,40 1800,160 2160,100 C2520,40 2880,160 2880,100 L2880,160 L0,160 Z" />
-        <path class="wave-path wave-3" d="M0,120 C480,80 960,160 1440,120 C1920,80 2400,160 2880,120 L2880,160 L0,160 Z" />
       </svg>
     </div>
 
@@ -458,8 +456,7 @@ onUnmounted(() => {
   position: absolute; inset: 0;
   background:
     radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 80%, rgba(6, 182, 212, 0.03) 0%, transparent 45%),
+    radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
     linear-gradient(180deg, #050B14 0%, #081426 30%, #0A1A30 60%, #060E1A 100%);
 }
 
@@ -495,17 +492,6 @@ onUnmounted(() => {
   100% { transform: translate(0, 0) scale(1); }
 }
 
-.ambient-scanline {
-  position: absolute; inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(6, 182, 212, 0.015) 2px,
-    rgba(6, 182, 212, 0.015) 4px
-  );
-}
-
 /* ── Orbs ── */
 
 .ambient-orbs {
@@ -519,25 +505,26 @@ onUnmounted(() => {
   filter: blur(80px);
 }
 
+.orb {
+  will-change: transform;
+}
+
 .orb-1 {
   width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 60%);
   top: -10%; left: -5%;
-  animation: orbFloat1 20s ease-in-out infinite;
+  animation: orbFloat1 25s ease-in-out infinite;
 }
 
 .orb-2 {
   width: 400px; height: 400px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
-  bottom: -5%; right: 10%;
-  animation: orbFloat2 25s ease-in-out infinite;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+  bottom: -10%; right: 5%;
+  animation: orbFloat2 30s ease-in-out infinite;
 }
 
 .orb-3 {
-  width: 350px; height: 350px;
-  background: radial-gradient(circle, rgba(6, 182, 212, 0.05) 0%, transparent 70%);
-  top: 40%; left: 50%;
-  animation: orbFloat3 18s ease-in-out infinite;
+  display: none;
 }
 
 @keyframes orbFloat1 {
@@ -571,6 +558,7 @@ onUnmounted(() => {
   background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.2));
   box-shadow: 0 0 4px rgba(6, 182, 212, 0.15);
   animation: dropletRise linear infinite;
+  will-change: transform, opacity;
 }
 
 @keyframes dropletRise {
@@ -614,17 +602,12 @@ onUnmounted(() => {
 
 .wave-1 {
   fill: rgba(6, 182, 212, 0.04);
-  animation: waveSlide 8s linear infinite;
+  animation: waveSlide 10s linear infinite;
 }
 
 .wave-2 {
   fill: rgba(59, 130, 246, 0.03);
-  animation: waveSlide 12s linear infinite reverse;
-}
-
-.wave-3 {
-  fill: rgba(6, 182, 212, 0.02);
-  animation: waveSlide 6s linear infinite;
+  animation: waveSlide 15s linear infinite reverse;
 }
 
 @keyframes waveSlide {
@@ -852,9 +835,9 @@ onUnmounted(() => {
   width: 400px;
   flex-shrink: 0;
   position: relative;
-  background: rgba(8, 18, 36, 0.65);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
+  background: rgba(8, 18, 36, 0.78);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(59, 130, 246, 0.1);
   border-radius: 16px;
   box-shadow:
@@ -863,9 +846,10 @@ onUnmounted(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
+  will-change: transform;
 }
 
-@supports not (backdrop-filter: blur(28px)) {
+@supports not (backdrop-filter: blur(12px)) {
   .login-card {
     background: rgba(10, 20, 40, 0.92);
   }
@@ -1483,12 +1467,12 @@ onUnmounted(() => {
 /* ══════════════ REDUCED MOTION ══════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .login-card,
   .ambient-topo,
   .ambient-panel,
   .status-bar,
   .particle,
   .orb,
+  .login-card,
   .wave-path {
     animation: none !important;
   }
@@ -1498,7 +1482,7 @@ onUnmounted(() => {
   .field-glow { display: none; }
   .form-error { animation: none; }
   .btn-submit::after { display: none; }
-  .wave-svg { display: none; }
+  .waves { display: none; }
   .fade-enter-active,
   .fade-leave-active {
     animation: none !important;
