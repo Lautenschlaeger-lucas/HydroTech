@@ -405,7 +405,7 @@ onMounted(() => {
     telemetry.value.nivel = Math.max(3.0, Math.min(5.5, +telemetry.value.nivel.toFixed(2)))
     telemetry.value.vazao = Math.max(600, Math.min(1100, Math.round(telemetry.value.vazao)))
     telemetry.value.umidade = Math.max(40, Math.min(95, Math.round(telemetry.value.umidade)))
-  }, 4000)
+  }, 6000)
 
   setInterval(() => {
     uptimeSeconds++
@@ -472,24 +472,19 @@ onUnmounted(() => {
 
 .ambient-topo {
   position: absolute; inset: 0;
-  opacity: 0.12;
+  opacity: 0.08;
   background-image:
     radial-gradient(circle at 25% 35%, transparent 0%, transparent 30%, rgba(6,182,212,0.06) 32%, transparent 35%),
     radial-gradient(circle at 65% 55%, transparent 0%, transparent 25%, rgba(59,130,246,0.05) 27%, transparent 30%),
-    radial-gradient(circle at 45% 75%, transparent 0%, transparent 40%, rgba(6,182,212,0.04) 42%, transparent 45%),
-    radial-gradient(circle at 80% 25%, transparent 0%, transparent 35%, rgba(59,130,246,0.04) 37%, transparent 40%),
-    radial-gradient(circle at 15% 65%, transparent 0%, transparent 28%, rgba(6,182,212,0.05) 30%, transparent 33%),
-    radial-gradient(circle at 55% 15%, transparent 0%, transparent 32%, rgba(59,130,246,0.03) 34%, transparent 37%);
+    radial-gradient(circle at 45% 75%, transparent 0%, transparent 40%, rgba(6,182,212,0.04) 42%, transparent 45%);
   background-size: 300px 300px;
-  animation: topoDrift 50s linear infinite;
+  animation: topoDrift 60s ease-in-out infinite;
 }
 
 @keyframes topoDrift {
-  0% { transform: translate(0, 0) scale(1); }
-  25% { transform: translate(15px, -10px) scale(1.02); }
-  50% { transform: translate(-8px, 8px) scale(0.98); }
-  75% { transform: translate(10px, -5px) scale(1.01); }
-  100% { transform: translate(0, 0) scale(1); }
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(10px, -6px); }
+  100% { transform: translate(0, 0); }
 }
 
 /* ── Orbs ── */
@@ -563,17 +558,14 @@ onUnmounted(() => {
 
 @keyframes dropletRise {
   0% {
-    transform: translateY(0) translateX(0) scale(1);
+    transform: translateY(0) translateX(0);
     opacity: 0;
   }
-  8% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 0.8;
+  10% {
+    opacity: 0.6;
   }
   100% {
-    transform: translateY(-110vh) translateX(var(--drift, 0px)) scale(0.3);
+    transform: translateY(-110vh) translateX(var(--drift, 0px));
     opacity: 0;
   }
 }
@@ -835,9 +827,7 @@ onUnmounted(() => {
   width: 400px;
   flex-shrink: 0;
   position: relative;
-  background: rgba(8, 18, 36, 0.78);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: linear-gradient(160deg, rgba(8, 20, 40, 0.88), rgba(6, 14, 26, 0.94));
   border: 1px solid rgba(59, 130, 246, 0.1);
   border-radius: 16px;
   box-shadow:
@@ -846,13 +836,6 @@ onUnmounted(() => {
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
   animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
-  will-change: transform;
-}
-
-@supports not (backdrop-filter: blur(12px)) {
-  .login-card {
-    background: rgba(10, 20, 40, 0.92);
-  }
 }
 
 .card-accent {
