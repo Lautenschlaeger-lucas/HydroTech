@@ -103,35 +103,36 @@
           </div>
 
           <form @submit.prevent="login" class="login-form" novalidate>
-            <div v-if="loginMode === 'email'" class="form-group">
-              <label for="login-email" :class="{ float: form.email }">E-mail</label>
-              <div class="input-wrapper" :class="{ filled: form.email, error: errors.email }">
-                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                </svg>
-                <input id="login-email" v-model="form.email" type="email" placeholder=" " autocomplete="email" :aria-invalid="errors.email" :aria-describedby="errors.email ? 'login-error' : undefined" @input="clearError('email')" @blur="validateField('email')"/>
+            <Transition name="mode-fade" mode="out-in">
+              <div v-if="loginMode === 'email'" key="email" class="form-group">
+                <div class="input-wrapper" :class="{ filled: form.email, error: errors.email }">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                  </svg>
+                  <input id="login-email" v-model="form.email" type="email" placeholder=" " autocomplete="email" :aria-invalid="errors.email" :aria-describedby="errors.email ? 'login-error' : undefined" @input="clearError('email')" @blur="validateField('email')"/>
+                  <label for="login-email">E-mail</label>
+                </div>
+                <p v-if="errors.email" class="field-error">Informe um e-mail válido.</p>
               </div>
-              <p v-if="errors.email" class="field-error">Informe um e-mail válido.</p>
-            </div>
-
-            <div v-else class="form-group">
-              <label for="login-phone" :class="{ float: form.telefone }">Telefone</label>
-              <div class="input-wrapper" :class="{ filled: form.telefone, error: errors.telefone }">
-                <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-                </svg>
-                <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" :aria-invalid="errors.telefone" :aria-describedby="errors.telefone ? 'login-error' : undefined" @focus="clearError('telefone')" @blur="validateField('telefone')"/>
+              <div v-else key="phone" class="form-group">
+                <div class="input-wrapper" :class="{ filled: form.telefone, error: errors.telefone }">
+                  <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  <input id="login-phone" :value="form.telefone" @input="onPhoneInput($event, 'telefone')" type="tel" inputmode="numeric" placeholder=" " autocomplete="tel" :aria-invalid="errors.telefone" :aria-describedby="errors.telefone ? 'login-error' : undefined" @focus="clearError('telefone')" @blur="validateField('telefone')"/>
+                  <label for="login-phone">Telefone</label>
+                </div>
+                <p v-if="errors.telefone" class="field-error">Informe um telefone válido.</p>
               </div>
-              <p v-if="errors.telefone" class="field-error">Informe um telefone válido.</p>
-            </div>
+            </Transition>
 
             <div class="form-group">
-              <label for="login-password" :class="{ float: form.senha }">Senha</label>
               <div class="input-wrapper" :class="{ filled: form.senha, error: errors.senha }">
                 <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
                 <input id="login-password" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder=" " autocomplete="current-password" :aria-invalid="errors.senha" :aria-describedby="errors.senha ? 'login-error' : undefined" @input="clearError('senha')" @blur="validateField('senha')"/>
+                <label for="login-password">Senha</label>
                 <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" tabindex="-1" :aria-label="showSenha ? 'Ocultar senha' : 'Mostrar senha'">
                   <svg v-if="!showSenha" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -501,27 +502,38 @@ onMounted(() => {
   max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
-  padding: 36px 32px;
-  box-shadow: var(--shadow-xl);
-  animation: fadeInUp 0.45s ease-out;
+  padding: 32px 28px;
+  box-shadow: var(--shadow-xl), 0 0 60px rgba(59, 130, 246, 0.06);
+  animation: fadeInUp 0.5s ease-out;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  position: relative;
+}
+
+.login-card:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: var(--shadow-xl), 0 0 60px rgba(59, 130, 246, 0.06), 0 0 40px rgba(59, 130, 246, 0.08);
+}
+
+.login-card-header {
+  text-align: center;
 }
 
 .login-card-header h2 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
 .login-card-header p {
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  margin-top: 6px;
+  font-size: 0.82rem;
+  margin-top: 4px;
 }
 
 /* Login Mode Toggle */
@@ -547,6 +559,8 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.25s ease;
   font-family: inherit;
+  position: relative;
+  overflow: hidden;
 }
 
 .login-mode-toggle button.active {
@@ -564,51 +578,48 @@ onMounted(() => {
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   position: relative;
-}
-
-.form-group label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  transition: all 0.2s ease;
-  padding-left: 2px;
 }
 
 .input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  transition: box-shadow 0.2s ease;
   border-radius: var(--radius-md);
 }
 
-.input-wrapper:focus-within {
-  box-shadow: 0 0 0 2px var(--accent-soft);
+.input-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  transition: box-shadow 0.25s ease;
 }
 
-.input-wrapper.error:focus-within {
+.input-wrapper:focus-within::after {
+  box-shadow: 0 0 0 2px var(--accent-soft), 0 0 20px rgba(59, 130, 246, 0.08);
+}
+
+.input-wrapper.error:focus-within::after {
   box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
 }
 
 .input-icon {
   position: absolute;
   left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 24px;
   color: var(--text-muted);
   pointer-events: none;
-  transition: color 0.2s ease;
-  z-index: 1;
+  transition: color 0.25s ease;
+  z-index: 2;
 }
 
 .input-wrapper:focus-within .input-icon {
@@ -621,13 +632,13 @@ onMounted(() => {
 
 .input-wrapper input {
   width: 100%;
-  padding: 12px 44px 12px 42px;
+  padding: 22px 44px 8px 42px;
   background: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: 0.9rem;
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
   font-family: inherit;
 }
 
@@ -644,11 +655,46 @@ onMounted(() => {
 
 .input-wrapper.error input:focus {
   border-color: var(--risk-high);
-  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.3);
 }
 
 .input-wrapper input::placeholder {
   color: transparent;
+}
+
+/* ── Floating Labels ── */
+.input-wrapper label {
+  position: absolute;
+  left: 42px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 400;
+  z-index: 2;
+  transform-origin: left center;
+  line-height: 1;
+}
+
+.input-wrapper:focus-within label,
+.input-wrapper.filled label {
+  top: 10px;
+  transform: translateY(0) scale(0.72);
+  left: 40px;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.input-wrapper.error label {
+  color: var(--risk-high);
+}
+
+.input-wrapper.error:focus-within label,
+.input-wrapper.error.filled label {
+  color: var(--risk-high);
 }
 
 /* Password Toggle */
@@ -667,7 +713,7 @@ onMounted(() => {
   justify-content: center;
   border-radius: 6px;
   transition: color 0.2s, background 0.2s;
-  z-index: 1;
+  z-index: 2;
 }
 
 .btn-toggle-pw:hover {
@@ -768,6 +814,8 @@ onMounted(() => {
   .status-dot { animation: none; }
   .wave { animation: none; }
   .wave--slow, .wave--med, .wave--fast { animation: none; }
+  .mode-fade-enter-active,
+  .mode-fade-leave-active { transition: none !important; }
 }
 
 .field-error {
@@ -776,6 +824,7 @@ onMounted(() => {
   margin-top: 2px;
   padding-left: 2px;
   font-weight: 500;
+  animation: fadeIn 0.25s ease;
 }
 
 /* Login Button */
@@ -789,24 +838,50 @@ onMounted(() => {
   font-weight: 700; font-size: 0.9rem;
   border: none;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.3s ease;
   letter-spacing: 0.02em;
   overflow: hidden;
   min-height: 48px;
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+}
+
+.btn-login::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 50%, #3B82F6 100%);
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.btn-login:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .btn-login:hover:not(:disabled) {
-  box-shadow: var(--shadow-glow);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.35), 0 4px 12px rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
+  background-position: 100% 50%;
 }
 
 .btn-login:active:not(:disabled) {
   transform: translateY(0);
+  transition-duration: 0.1s;
 }
 
 .btn-login:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
+}
+
+.btn-content,
+.btn-loading {
+  position: relative;
+  z-index: 1;
 }
 
 .btn-content {
@@ -839,17 +914,56 @@ onMounted(() => {
   font-weight: 600;
   text-decoration: none;
   transition: opacity 0.2s;
+  position: relative;
+}
+
+.login-card-footer a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent);
+  transition: width 0.25s ease;
+}
+
+.login-card-footer a:hover::after {
+  width: 100%;
 }
 
 .login-card-footer a:hover {
-  opacity: 0.7;
-  text-decoration: underline;
+  opacity: 1;
+}
+
+/* ── Mode Transition ── */
+.mode-fade-enter-active {
+  animation: modeIn 0.3s ease-out;
+}
+
+.mode-fade-leave-active {
+  animation: modeOut 0.2s ease-in;
+}
+
+@keyframes modeIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modeOut {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(4px) scale(0.98); }
 }
 
 /* Animations */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes pulse {
