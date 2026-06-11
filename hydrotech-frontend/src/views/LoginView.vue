@@ -55,8 +55,8 @@
                 <span class="gauge-number">{{ telemetry.nivel.toFixed(2) }}</span>
                 <span class="gauge-unit">m</span>
               </div>
-              <div class="gauge-label">NÍVEL DO RIO</div>
             </div>
+            <div class="gauge-label">NÍVEL DO RIO</div>
           </div>
 
           <div class="data-grid">
@@ -682,7 +682,8 @@ onUnmounted(() => {
 
 .gauge-section {
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .gauge-container {
@@ -725,15 +726,12 @@ onUnmounted(() => {
 }
 
 .gauge-label {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 0.6rem;
   font-weight: 700;
   color: rgba(148, 163, 184, 0.35);
   letter-spacing: 0.15em;
-  white-space: nowrap;
+  text-align: center;
+  padding-top: 4px;
 }
 
 /* ── Data Grid ── */
