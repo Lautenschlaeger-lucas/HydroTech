@@ -59,22 +59,22 @@
             <div class="gauge-label">NÍVEL DO RIO</div>
           </div>
 
-          <div class="data-grid">
-            <div class="data-item">
-              <span class="data-label">VAZÃO</span>
-              <span class="data-value">{{ telemetry.vazao.toFixed(0) }} <small>m³/s</small></span>
+          <div class="system-grid">
+            <div class="sys-card">
+              <span class="sys-label">RIOS MONITORADOS</span>
+              <span class="sys-value">{{ sysInfo.totalRios }}</span>
             </div>
-            <div class="data-item">
-              <span class="data-label">TEMP.</span>
-              <span class="data-value">{{ telemetry.temperatura.toFixed(1) }} <small>°C</small></span>
+            <div class="sys-card">
+              <span class="sys-label">PONTOS DE RISCO</span>
+              <span class="sys-value">{{ sysInfo.totalPontos }}</span>
             </div>
-            <div class="data-item">
-              <span class="data-label">PRESSÃO</span>
-              <span class="data-value">{{ telemetry.pressao.toFixed(1) }} <small>hPa</small></span>
+            <div class="sys-card">
+              <span class="sys-label">STATUS</span>
+              <span class="sys-value sys-status">{{ sysInfo.status }}</span>
             </div>
-            <div class="data-item">
-              <span class="data-label">UMIDADE</span>
-              <span class="data-value">{{ telemetry.umidade.toFixed(0) }} <small>%</small></span>
+            <div class="sys-card">
+              <span class="sys-label">SENSORES</span>
+              <span class="sys-value">{{ sysInfo.sensores }}</span>
             </div>
           </div>
 
@@ -245,11 +245,13 @@ const remember = ref(true)
 
 // Live telemetry
 const telemetry = ref({
-  nivel: 4.27,
-  vazao: 842,
-  temperatura: 22.4,
-  pressao: 1013.2,
-  umidade: 67
+  nivel: 3.8
+})
+const sysInfo = ref({
+  totalRios: '—',
+  totalPontos: '—',
+  status: 'OPERACIONAL',
+  sensores: '—'
 })
 const currentTime = ref('')
 const uptime = ref('00:00:00')
@@ -276,13 +278,23 @@ const signalClass = computed(() => {
 
 const streamData = computed(() => {
   const now = new Date()
+  const nivel = telemetry.value.nivel
+  const status = nivel > 4.5 ? 'EMERGÊNCIA' : nivel > 3.5 ? 'ALERTA' : nivel > 2.5 ? 'ATENÇÃO' : 'NORMAL'
   const times = []
   for (let i = 5; i > 0; i--) {
     const t = new Date(now.getTime() - i * 7000)
+    const msgs = ['Leitura de nível', 'Transmissão de dados', 'Varredura de sensores', 'Satélite OK', 'Batch processado']
+    const vals = [
+      `${nivel.toFixed(2)}m — ${status}`,
+      `${(nivel - 0.1 + Math.random() * 0.2).toFixed(2)}m`,
+      `✓ ${3 + Math.floor(Math.random() * 2)} sensores`,
+      `Latência ${(80 + Math.random() * 120).toFixed(0)}ms`,
+      `${(10 + Math.random() * 15).toFixed(1)}s`
+    ]
     times.push({
       time: t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      msg: ['Leitura de nível', 'Atualização de vazão', 'Varredura de sensores', 'Transmissão OK', 'Batch processado'][i-1],
-      val: ['OK', `${(700 + Math.random() * 300).toFixed(0)} m³/s`, `${(3.8 + Math.random() * 1.5).toFixed(2)}m`, '✓ 4 sensores', `${(20 + Math.random() * 10).toFixed(1)}s`][i-1]
+      msg: msgs[i-1],
+      val: vals[i-1]
     })
   }
   return times
@@ -383,10 +395,23 @@ const login = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (remember.value) {
     const saved = localStorage.getItem('login_email')
     if (saved) form.value.email = saved
+  }
+
+  try {
+    const res = await api.getRiosPublico()
+    const rios = res.data
+    sysInfo.value.totalRios = rios.length
+    const todosPontos = await Promise.all(rios.map(r => api.getPontosRiscoPublico(r.id).catch(() => ({ data: [] }))))
+    sysInfo.value.totalPontos = todosPontos.reduce((acc, p) => acc + p.data.length, 0)
+    sysInfo.value.sensores = `${sysInfo.value.totalPontos * 2}+`
+  } catch {
+    sysInfo.value.totalRios = '—'
+    sysInfo.value.totalPontos = '—'
+    sysInfo.value.sensores = '—'
   }
 
   const updateTime = () => {
@@ -396,15 +421,8 @@ onMounted(() => {
   setInterval(updateTime, 1000)
 
   telemetryTimer = setInterval(() => {
-    telemetry.value.nivel += (Math.random() - 0.5) * 0.04
-    telemetry.value.vazao += Math.floor((Math.random() - 0.5) * 12)
-    telemetry.value.temperatura += (Math.random() - 0.5) * 0.2
-    telemetry.value.pressao += (Math.random() - 0.5) * 1.5
-    telemetry.value.umidade += (Math.floor((Math.random() - 0.5) * 4))
-
-    telemetry.value.nivel = Math.max(3.0, Math.min(5.5, +telemetry.value.nivel.toFixed(2)))
-    telemetry.value.vazao = Math.max(600, Math.min(1100, Math.round(telemetry.value.vazao)))
-    telemetry.value.umidade = Math.max(40, Math.min(95, Math.round(telemetry.value.umidade)))
+    telemetry.value.nivel += (Math.random() - 0.5) * 0.06
+    telemetry.value.nivel = Math.max(2.0, Math.min(6.0, +telemetry.value.nivel.toFixed(2)))
   }, 6000)
 
   setInterval(() => {
@@ -734,16 +752,16 @@ onUnmounted(() => {
   padding-top: 4px;
 }
 
-/* ── Data Grid ── */
+/* ── System Info Grid ── */
 
-.data-grid {
+.system-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   max-width: 320px;
 }
 
-.data-item {
+.sys-card {
   background: rgba(59, 130, 246, 0.03);
   border: 1px solid rgba(59, 130, 246, 0.06);
   border-radius: 8px;
@@ -754,30 +772,31 @@ onUnmounted(() => {
   transition: border-color 0.3s, background 0.3s;
 }
 
-.data-item:hover {
+.sys-card:hover {
   border-color: rgba(59, 130, 246, 0.15);
   background: rgba(59, 130, 246, 0.05);
 }
 
-.data-label {
+.sys-label {
   font-size: 0.6rem;
   font-weight: 700;
   color: rgba(148, 163, 184, 0.4);
   letter-spacing: 0.12em;
 }
 
-.data-value {
-  font-size: 1.05rem;
-  font-weight: 700;
+.sys-value {
+  font-size: 1.2rem;
+  font-weight: 800;
   color: #E2E8F0;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-.data-value small {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: rgba(148, 163, 184, 0.5);
+.sys-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #10B981;
+  letter-spacing: 0.08em;
 }
 
 /* ── Data Stream ── */
