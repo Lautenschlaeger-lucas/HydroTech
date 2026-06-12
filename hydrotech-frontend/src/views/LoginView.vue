@@ -330,7 +330,10 @@ onMounted(async () => {
     const rios = res.data
     sysInfo.value.totalRios = rios.length
     const todosPontos = await Promise.all(rios.map(r => api.getPontosRiscoPublico(r.id).catch(() => ({ data: [] }))))
-    sysInfo.value.totalPontos = todosPontos.reduce((acc, p) => acc + p.data.length, 0)
+    sysInfo.value.totalPontos = todosPontos.reduce((acc, p) => {
+      const arr = Array.isArray(p.data) ? p.data : (p.data?.results ?? [])
+      return acc + arr.length
+    }, 0)
   } catch {
     sysInfo.value.totalRios = '—'
     sysInfo.value.totalPontos = '—'

@@ -145,6 +145,7 @@ class PontoRiscoPublicoListView(generics.ListAPIView):
     serializer_class = PontoRiscoSerializer
     permission_classes = []  # No authentication required
     authentication_classes = []
+    pagination_class = None  # Return all pontos without pagination
 
     def get_queryset(self):
         rio_id = self.kwargs.get('rio_id')
