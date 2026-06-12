@@ -406,11 +406,7 @@ class RiosGeminiDescriptionView(APIView):
             
             api_key = os.getenv('GEMINI_API_KEY')
             
-            # Se já temos cache real (não-fallback), retornar
-            if cached_data and not cached_data.get('using_fallback'):
-                return Response(cached_data)
-
-            # 2. Consultar o Gemini se tiver API Key
+            # Consultar o Gemini se tiver API Key
             if api_key:
                 logger.info(f"Consultando o Gemini 2.5 Flash para o rio: {rio.nome}")
                 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
@@ -459,10 +455,6 @@ Estrutura do JSON exigida:
                         data = json.loads(text_response)
                         data['using_fallback'] = False
                         
-                        # Salvar cache
-                        rio.descricao_gemini = json.dumps(data, ensure_ascii=False)
-                        rio.save()
-                        
                         return Response(data)
                     else:
                         logger.error(f"Erro no Gemini API (Status: {response.status_code}): {response.text}")
@@ -471,11 +463,6 @@ Estrutura do JSON exigida:
             
             # 3. Fallback (dados simulados extremamente realistas)
             fallback_data = generate_fallback_description(rio.nome, rio.cidade, rio.estado)
-            
-            # Salvar no banco como cache simulado
-            rio.descricao_gemini = json.dumps(fallback_data, ensure_ascii=False)
-            rio.save()
-            
             return Response(fallback_data)
             
         except Exception as e:
