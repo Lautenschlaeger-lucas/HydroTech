@@ -18,6 +18,7 @@ from rios.views import (
     RiosPublicoListView,
     PontoRiscoPublicoListView,
     RiosGeminiDescriptionView,
+    PublicSummaryView,
     HealthCheckView,
 )
 
@@ -44,6 +45,7 @@ urlpatterns = [
     path('publico/rios/', RiosPublicoListView.as_view(), name='rios-publico-list'),
     path('publico/rios/<int:rio_id>/pontos-risco/', PontoRiscoPublicoListView.as_view(), name='ponto-risco-publico-list'),
     path('publico/rios/<int:pk>/descricao-gemini/', RiosGeminiDescriptionView.as_view(), name='rios-gemini-description-publico'),
+    path('publico/summary/', PublicSummaryView.as_view(), name='public-summary'),
     path('health/', HealthCheckView.as_view(), name='health-check'),
 ]
 

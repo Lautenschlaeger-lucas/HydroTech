@@ -227,18 +227,43 @@ def generate_fallback_description(nome, cidade, estado):
             "using_fallback": True
         }
     
-    # Rio Genérico
+    # Rio Genérico — dados determinísticos por nome para evitar repetição
     else:
+        seed = sum(ord(c) for c in nome) + len(nome) * 31
+        comp = 30 + (seed * 7) % 770
+        areas_map = [
+            f"Margens urbanas de {cidade}",
+            f"Cotas baixas de {cidade}",
+            f"Região central de {cidade}",
+            f"Zona ribeirinha de {cidade}",
+            f"Várzeas de {cidade}",
+        ]
+        foz_map = [
+            "Rio principal da bacia",
+            "Bacia hidrográfica regional",
+            "Afluente de destaque",
+            "Calha principal do estado",
+            "Curso d'água do bioma local",
+        ]
+        periodo_map = [
+            "Novembro a Março",
+            "Dezembro a Abril",
+            "Outubro a Fevereiro",
+            "Janeiro a Maio",
+            "Estação chuvosa local",
+        ]
+        idx = seed % 5
         return {
-            "comprimento": "150 km",
-            "areas_risco": "Cotas baixas do município",
-            "foz": "Bacia regional",
+            "comprimento": f"{comp} km",
+            "areas_risco": areas_map[idx],
+            "foz": foz_map[idx],
             "descricao_historico_enchentes": (
-                f"O rio {nome} é vital para {cidade}. "
-                "Apresenta picos bruscos de vazão durante temporais intensos, "
-                "demandando monitoramento contínuo pela Defesa Civil."
+                f"O rio {nome}, que atravessa {cidade}, "
+                "apresenta picos bruscos de vazão durante temporais intensos, "
+                "demandando monitoramento contínuo pela Defesa Civil. "
+                "Enchentes históricas registradas exigem atenção permanente."
             ),
-            "periodo_critico": "Estação chuvosa",
+            "periodo_critico": periodo_map[idx],
             "using_fallback": True
         }
 
@@ -351,6 +376,16 @@ Estrutura do JSON exigida:
 
 from django.db import connections
 from django.db.utils import OperationalError
+
+class PublicSummaryView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        return Response({
+            'total_rios': Rios.objects.count(),
+            'total_pontos': PontoRisco.objects.count(),
+        })
 
 class HealthCheckView(APIView):
     authentication_classes = []

@@ -140,6 +140,9 @@ export default {
   },
 
   // Endpoints Públicos (sem autenticação, para /monitoramento)
+  getPublicSummary() {
+    return apiClient.get('/publico/summary/');
+  },
   getRiosPublico() {
     return apiClient.get('/publico/rios/');
   },

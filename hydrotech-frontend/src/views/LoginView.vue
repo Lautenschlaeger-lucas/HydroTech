@@ -326,14 +326,9 @@ onMounted(async () => {
   }
 
   try {
-    const res = await api.getRiosPublico()
-    const rios = res.data
-    sysInfo.value.totalRios = rios.length
-    const todosPontos = await Promise.all(rios.map(r => api.getPontosRiscoPublico(r.id).catch(() => ({ data: [] }))))
-    sysInfo.value.totalPontos = todosPontos.reduce((acc, p) => {
-      const arr = Array.isArray(p.data) ? p.data : (p.data?.results ?? [])
-      return acc + arr.length
-    }, 0)
+    const res = await api.getPublicSummary()
+    sysInfo.value.totalRios = res.data.total_rios
+    sysInfo.value.totalPontos = res.data.total_pontos
   } catch {
     sysInfo.value.totalRios = '—'
     sysInfo.value.totalPontos = '—'
@@ -372,7 +367,7 @@ onMounted(async () => {
 
 .login-page {
   min-height: 100vh;
-  background: #050B14;
+  background: var(--bg-primary);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -388,15 +383,15 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.ambient-gradient {
+[data-theme='dark'] .ambient-gradient {
   position: absolute; inset: 0;
   background:
     radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 40%),
-    linear-gradient(180deg, #050B14 0%, #081426 30%, #0A1A30 60%, #060E1A 100%);
+    linear-gradient(180deg, var(--bg-primary) 0%, #081426 30%, #0A1A30 60%, #060E1A 100%);
 }
 
-.ambient-grid {
+[data-theme='dark'] .ambient-grid {
   position: absolute; inset: 0;
   background-image:
     linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
@@ -406,7 +401,7 @@ onMounted(async () => {
   -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
 }
 
-.ambient-topo {
+[data-theme='dark'] .ambient-topo {
   position: absolute; inset: 0;
   opacity: 0.08;
   background-image:
@@ -430,24 +425,21 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.orb {
+[data-theme='dark'] .orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(80px);
-}
-
-.orb {
   will-change: transform;
 }
 
-.orb-1 {
+[data-theme='dark'] .orb-1 {
   width: 500px; height: 500px;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 60%);
   top: -10%; left: -5%;
   animation: orbFloat1 25s ease-in-out infinite;
 }
 
-.orb-2 {
+[data-theme='dark'] .orb-2 {
   width: 400px; height: 400px;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
   bottom: -10%; right: 5%;
@@ -483,7 +475,7 @@ onMounted(async () => {
   overflow: hidden;
 }
 
-.particle {
+[data-theme='dark'] .particle {
   position: absolute;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.5), rgba(59, 130, 246, 0.2));
@@ -518,7 +510,7 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.wave-svg {
+[data-theme='dark'] .wave-svg {
   display: block;
   width: 200%;
   height: 100%;
@@ -528,12 +520,12 @@ onMounted(async () => {
   fill: none;
 }
 
-.wave-1 {
+[data-theme='dark'] .wave-1 {
   fill: rgba(6, 182, 212, 0.04);
   animation: waveSlide 10s linear infinite;
 }
 
-.wave-2 {
+[data-theme='dark'] .wave-2 {
   fill: rgba(59, 130, 246, 0.03);
   animation: waveSlide 15s linear infinite reverse;
 }
@@ -584,7 +576,7 @@ onMounted(async () => {
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: rgba(148, 163, 184, 0.6);
+  color: var(--text-secondary);
   text-transform: uppercase;
 }
 
@@ -603,7 +595,7 @@ onMounted(async () => {
 }
 
 .live-text {
-  color: rgba(16, 185, 129, 0.7);
+  color: var(--status-active);
 }
 
 .live-time {
@@ -611,7 +603,7 @@ onMounted(async () => {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 0.7rem;
   letter-spacing: 0.05em;
-  color: rgba(148, 163, 184, 0.4);
+  color: var(--text-muted);
 }
 
 /* ── System Info Grid ── */
@@ -624,8 +616,8 @@ onMounted(async () => {
 }
 
 .sys-card {
-  background: rgba(59, 130, 246, 0.03);
-  border: 1px solid rgba(59, 130, 246, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -635,21 +627,21 @@ onMounted(async () => {
 }
 
 .sys-card:hover {
-  border-color: rgba(59, 130, 246, 0.15);
-  background: rgba(59, 130, 246, 0.05);
+  border-color: var(--border-accent);
+  background: var(--bg-tertiary);
 }
 
 .sys-label {
   font-size: 0.6rem;
   font-weight: 700;
-  color: rgba(148, 163, 184, 0.4);
+  color: var(--text-dim);
   letter-spacing: 0.12em;
 }
 
 .sys-value {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #E2E8F0;
+  color: var(--text-primary);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
@@ -657,7 +649,7 @@ onMounted(async () => {
 .sys-status {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #10B981;
+  color: var(--status-active);
   letter-spacing: 0.08em;
 }
 
@@ -667,13 +659,10 @@ onMounted(async () => {
   width: 400px;
   flex-shrink: 0;
   position: relative;
-  background: linear-gradient(160deg, rgba(8, 20, 40, 0.88), rgba(6, 14, 26, 0.94));
-  border: 1px solid rgba(59, 130, 246, 0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow:
-    0 40px 100px rgba(0, 0, 0, 0.5),
-    0 0 60px rgba(59, 130, 246, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow-xl);
   animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
@@ -681,7 +670,7 @@ onMounted(async () => {
 .card-accent {
   position: absolute;
   top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, #06B6D4, #3B82F6, #06B6D4, transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-hover), var(--accent), transparent);
   background-size: 200% 100%;
   animation: accentSlide 4s ease-in-out infinite;
 }
@@ -708,7 +697,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 18px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .brand {
@@ -721,7 +710,7 @@ onMounted(async () => {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #0891B2 0%, #3B82F6 100%);
+  background: var(--accent-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -739,7 +728,7 @@ onMounted(async () => {
 .brand-name {
   font-size: 1rem;
   font-weight: 800;
-  color: #E2E8F0;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -747,7 +736,7 @@ onMounted(async () => {
 .brand-sub {
   font-size: 0.58rem;
   font-weight: 600;
-  color: #06B6D4;
+  color: var(--accent);
   letter-spacing: 0.15em;
   opacity: 0.7;
 }
@@ -755,11 +744,11 @@ onMounted(async () => {
 .brand-badge {
   font-size: 0.58rem;
   font-weight: 700;
-  color: rgba(148, 163, 184, 0.3);
-  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  background: var(--bg-secondary);
   padding: 3px 10px;
   border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
   letter-spacing: 0.05em;
 }
 
@@ -781,7 +770,7 @@ onMounted(async () => {
 .title-eyebrow {
   font-size: 0.6rem;
   font-weight: 700;
-  color: #06B6D4;
+  color: var(--accent);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   opacity: 0.7;
@@ -790,14 +779,14 @@ onMounted(async () => {
 .card-title h1 {
   font-size: 1.35rem;
   font-weight: 700;
-  color: #F1F5F9;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
 .card-title p {
   font-size: 0.82rem;
-  color: rgba(148, 163, 184, 0.6);
+  color: var(--text-secondary);
   margin-top: 4px;
   line-height: 1.5;
 }
@@ -807,10 +796,10 @@ onMounted(async () => {
 .mode-tabs {
   display: flex;
   gap: 0;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--bg-secondary);
   border-radius: 8px;
   padding: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
 }
 
 .mode-tabs button {
@@ -823,7 +812,7 @@ onMounted(async () => {
   border-radius: 6px;
   border: none;
   background: transparent;
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--text-muted);
   font-weight: 600;
   font-size: 0.78rem;
   cursor: pointer;
@@ -833,14 +822,14 @@ onMounted(async () => {
 }
 
 .mode-tabs button.active {
-  background: linear-gradient(135deg, #0891B2, #3B82F6);
+  background: var(--accent-gradient);
   color: white;
   box-shadow: 0 2px 12px rgba(6, 182, 212, 0.25);
 }
 
 .mode-tabs button:not(.active):hover {
-  color: rgba(148, 163, 184, 0.8);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
 }
 
 /* ── Form ── */
@@ -860,7 +849,7 @@ onMounted(async () => {
 .field-group label {
   font-size: 0.65rem;
   font-weight: 700;
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--text-muted);
   letter-spacing: 0.08em;
   padding-left: 2px;
   text-transform: uppercase;
@@ -871,21 +860,21 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   transition: border-color 0.3s, background 0.3s, box-shadow 0.3s;
   overflow: hidden;
 }
 
 .field-wrap:focus-within {
-  border-color: rgba(6, 182, 212, 0.25);
-  background: rgba(6, 182, 212, 0.03);
+  border-color: var(--accent);
+  background: var(--bg-tertiary);
   box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.06);
 }
 
 .field-wrap.field-error {
-  border-color: rgba(220, 38, 38, 0.3);
-  background: rgba(220, 38, 38, 0.03);
+  border-color: var(--emergency);
+  background: var(--emergency-soft);
 }
 
 .field-wrap.field-error:focus-within {
@@ -897,14 +886,14 @@ onMounted(async () => {
   padding: 12px 44px 12px 14px;
   background: transparent;
   border: none;
-  color: #E2E8F0;
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
 }
 
 .field-wrap input::placeholder {
-  color: rgba(79, 109, 138, 0.3);
+  color: var(--text-dim);
 }
 
 .field-glow {
@@ -914,7 +903,7 @@ onMounted(async () => {
   transform: translateX(-50%);
   width: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #06B6D4, #3B82F6, #06B6D4, transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), var(--accent-hover), var(--accent), transparent);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -923,7 +912,7 @@ onMounted(async () => {
 }
 
 .field-wrap.field-error .field-glow {
-  background: linear-gradient(90deg, transparent, #DC2626, transparent);
+  background: linear-gradient(90deg, transparent, var(--emergency), transparent);
   width: 100%;
 }
 
@@ -948,7 +937,7 @@ onMounted(async () => {
 }
 
 .field-msg.error-msg {
-  color: rgba(220, 38, 38, 0.7);
+  color: var(--emergency);
   animation: fadeIn 0.2s ease;
 }
 
@@ -961,7 +950,7 @@ onMounted(async () => {
   transform: translateY(-50%);
   background: none;
   border: none;
-  color: rgba(148, 163, 184, 0.4);
+  color: var(--text-muted);
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -972,8 +961,8 @@ onMounted(async () => {
 }
 
 .btn-eye:hover {
-  color: rgba(148, 163, 184, 0.7);
-  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
 }
 
 /* ── Form Options ── */
@@ -989,14 +978,14 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   font-size: 0.8rem;
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--text-muted);
   cursor: pointer;
   user-select: none;
   transition: color 0.2s;
 }
 
 .check-label:hover {
-  color: rgba(148, 163, 184, 0.7);
+  color: var(--text-secondary);
 }
 
 .check-input {
@@ -1007,7 +996,7 @@ onMounted(async () => {
   width: 17px;
   height: 17px;
   border-radius: 4px;
-  border: 2px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid var(--border);
   background: transparent;
   display: flex;
   align-items: center;
@@ -1023,8 +1012,8 @@ onMounted(async () => {
 }
 
 .check-input:checked + .check-box {
-  background: #3B82F6;
-  border-color: #3B82F6;
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .check-input:checked + .check-box svg {
@@ -1033,7 +1022,7 @@ onMounted(async () => {
 
 .forgot-link {
   font-size: 0.8rem;
-  color: #06B6D4;
+  color: var(--accent);
   font-weight: 600;
   text-decoration: none;
   opacity: 0.6;
@@ -1050,13 +1039,13 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #DC2626;
-  background: rgba(220, 38, 38, 0.06);
+  color: var(--emergency);
+  background: var(--emergency-soft);
   padding: 10px 14px;
   border-radius: 8px;
   font-size: 0.8rem;
   font-weight: 500;
-  border: 1px solid rgba(220, 38, 38, 0.1);
+  border: 1px solid var(--emergency-soft);
   animation: formShake 0.35s ease;
 }
 
@@ -1078,7 +1067,7 @@ onMounted(async () => {
   width: 100%;
   padding: 13px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #0891B2 0%, #3B82F6 100%);
+  background: var(--accent-gradient);
   color: white;
   font-weight: 700;
   font-size: 0.88rem;
@@ -1096,7 +1085,7 @@ onMounted(async () => {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(135deg, #0E7490 0%, #2563EB 50%, #3B82F6 100%);
+  background: linear-gradient(135deg, var(--accent-hover), var(--accent) 50%, var(--accent-hover) 100%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -1106,7 +1095,7 @@ onMounted(async () => {
   position: absolute;
   inset: -2px;
   border-radius: inherit;
-  background: linear-gradient(135deg, #06B6D4, #3B82F6);
+  background: var(--accent-gradient);
   opacity: 0;
   transition: opacity 0.4s ease;
   z-index: -1;
@@ -1123,7 +1112,7 @@ onMounted(async () => {
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.2);
+  box-shadow: var(--shadow-glow);
 }
 
 .btn-submit:active:not(:disabled) {
@@ -1170,17 +1159,17 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
-  background: rgba(0, 0, 0, 0.15);
+  border-top: 1px solid var(--border-light);
+  background: var(--bg-secondary);
 }
 
 .card-footer p {
   font-size: 0.8rem;
-  color: rgba(148, 163, 184, 0.5);
+  color: var(--text-muted);
 }
 
 .card-footer a {
-  color: #06B6D4;
+  color: var(--accent);
   font-weight: 600;
   text-decoration: none;
   transition: opacity 0.2s;
@@ -1195,7 +1184,7 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   font-size: 0.65rem;
-  color: rgba(79, 109, 138, 0.4);
+  color: var(--text-dim);
   font-weight: 600;
 }
 
@@ -1217,9 +1206,9 @@ onMounted(async () => {
   align-items: center;
   gap: 20px;
   padding: 10px 0 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.03);
+  border-top: 1px solid var(--border-light);
   font-size: 0.68rem;
-  color: rgba(148, 163, 184, 0.3);
+  color: var(--text-dim);
   font-weight: 500;
   animation: fadeIn 0.8s ease-out 0.3s both;
 }
@@ -1243,19 +1232,19 @@ onMounted(async () => {
 }
 
 .status-green {
-  background: #10B981;
+  background: var(--status-active);
   box-shadow: 0 0 5px rgba(16, 185, 129, 0.3);
   animation: dotPulse 3s ease-in-out infinite;
 }
 
 .status-yellow {
-  background: #D97706;
+  background: var(--risk-medium);
   box-shadow: 0 0 5px rgba(217, 119, 6, 0.3);
   animation: dotPulse 2s ease-in-out infinite;
 }
 
 .status-red {
-  background: #DC2626;
+  background: var(--emergency);
   box-shadow: 0 0 5px rgba(220, 38, 38, 0.3);
   animation: dotPulse 1.5s ease-in-out infinite;
 }
@@ -1264,7 +1253,7 @@ onMounted(async () => {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: rgba(148, 163, 184, 0.15);
+  background: var(--text-dim);
 }
 
 /* ══════════════ TRANSITIONS ══════════════ */
@@ -1370,5 +1359,19 @@ onMounted(async () => {
   .waves {
     height: 60px;
   }
+}
+</style>
+
+<!-- Global overrides for theme support (data-theme is on <html>, outside component scope) -->
+<style>
+[data-theme='light'] .ambient-gradient,
+[data-theme='light'] .ambient-orbs,
+[data-theme='light'] .ambient-particles,
+[data-theme='light'] .waves {
+  display: none !important;
+}
+
+[data-theme='light'] .login-page {
+  background: var(--bg-primary);
 }
 </style>
