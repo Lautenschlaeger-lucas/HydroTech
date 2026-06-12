@@ -290,13 +290,9 @@ class RiosGeminiDescriptionView(APIView):
             
             api_key = os.getenv('GEMINI_API_KEY')
             
-            # Se já temos cache
-            if cached_data:
-                # Se o cache é simulado E agora temos uma chave Gemini API real configurada
-                if cached_data.get('using_fallback') and api_key:
-                    logger.info(f"Atualizando descrição simulada do rio {rio.nome} para resposta real do Gemini")
-                else:
-                    return Response(cached_data)
+            # Se já temos cache real (não-fallback), retornar
+            if cached_data and not cached_data.get('using_fallback'):
+                return Response(cached_data)
 
             # 2. Consultar o Gemini se tiver API Key
             if api_key:
