@@ -226,11 +226,127 @@ def generate_fallback_description(nome, cidade, estado):
             "periodo_critico": "Novembro a Março",
             "using_fallback": True
         }
-    
+
+    # Rio Negro
+    elif "negro" in nome_lower:
+        return {
+            "comprimento": "2.250 km",
+            "areas_risco": "Margens de Manaus e municípios do Alto Rio Negro",
+            "foz": "Rio Amazonas",
+            "descricao_historico_enchentes": (
+                "O Rio Negro é o maior afluente da margem esquerda do Amazonas. "
+                "Suas cheias históricas, como a de 2021, alagaram vastas áreas da região metropolitana de Manaus, "
+                "atingindo níveis recordes acima de 30 metros."
+            ),
+            "periodo_critico": "Maio a Julho",
+            "using_fallback": True
+        }
+
+    # Rio Madeira
+    elif "madeira" in nome_lower:
+        return {
+            "comprimento": "3.250 km",
+            "areas_risco": "Margens de Porto Velho e municípios ribeirinhos",
+            "foz": "Rio Amazonas",
+            "descricao_historico_enchentes": (
+                "O Rio Madeira é um dos principais formadores do Amazonas. "
+                "Enchentes severas como a de 2014 em Porto Velho desabrigaram milhares e "
+                "paralisaram a hidrovia por semanas."
+            ),
+            "periodo_critico": "Janeiro a Abril",
+            "using_fallback": True
+        }
+
+    # Rio Tocantins
+    elif "tocantins" in nome_lower:
+        return {
+            "comprimento": "2.400 km",
+            "areas_risco": "Margens de Marabá e Imperatriz",
+            "foz": "Baía do Marajó (Rio Amazonas)",
+            "descricao_historico_enchentes": (
+                "Banha a região Norte e Centro-Oeste. As cheias sazonais do Tocantins "
+                "atingem cidades como Marabá com frequência, com destaque para a enchente histórica de 2023."
+            ),
+            "periodo_critico": "Janeiro a Maio",
+            "using_fallback": True
+        }
+
+    # Rio Xingu
+    elif "xingu" in nome_lower:
+        return {
+            "comprimento": "2.200 km",
+            "areas_risco": "Volta Grande do Xingu e Altamira",
+            "foz": "Rio Amazonas",
+            "descricao_historico_enchentes": (
+                "Conhecido por suas corredeiras e pela usina de Belo Monte. "
+                "Enchentes históricas impactam comunidades ribeirinhas e indígenas "
+                "ao longo do curso."
+            ),
+            "periodo_critico": "Fevereiro a Junho",
+            "using_fallback": True
+        }
+
+    # Rio Tapajós
+    elif "tapajós" in nome_lower or "tapajos" in nome_lower:
+        return {
+            "comprimento": "1.900 km",
+            "areas_risco": "Margens de Santarém e Itaituba",
+            "foz": "Rio Amazonas",
+            "descricao_historico_enchentes": (
+                "Formado pelos rios Teles Pires e Juruena. Suas cheias sazonais "
+                "elevam rapidamente o nível em Santarém, afetando bairros ribeirinhos."
+            ),
+            "periodo_critico": "Março a Junho",
+            "using_fallback": True
+        }
+
+    # Rio Doce
+    elif "doce" in nome_lower:
+        return {
+            "comprimento": "853 km",
+            "areas_risco": "Vale do Rio Doce (MG/ES)",
+            "foz": "Oceano Atlântico",
+            "descricao_historico_enchentes": (
+                "O Rio Doce foi palco da maior tragédia ambiental do Brasil com o rompimento da barragem de Fundão. "
+                "Suas enchentes naturais históricas, como a de 1979, também causaram destruição severa."
+            ),
+            "periodo_critico": "Novembro a Março",
+            "using_fallback": True
+        }
+
+    # Rio Iguaçu
+    elif "iguaçu" in nome_lower or "iguacu" in nome_lower:
+        return {
+            "comprimento": "1.320 km",
+            "areas_risco": "Bacia do Iguaçu e margens de Curitiba",
+            "foz": "Rio Paraná",
+            "descricao_historico_enchentes": (
+                "Conhecido pelas Cataratas do Iguaçu, o rio drena a região Sul. "
+                "Enchentes como a de 1983 e 2014 em União da Vitória marcaram sua história."
+            ),
+            "periodo_critico": "Outubro a Março",
+            "using_fallback": True
+        }
+
+    # Rio Parnaíba
+    elif "parnaíba" in nome_lower or "parnaiba" in nome_lower:
+        return {
+            "comprimento": "1.400 km",
+            "areas_risco": "Planície litorânea do Piauí e Maranhão",
+            "foz": "Oceano Atlântico (Delta do Parnaíba)",
+            "descricao_historico_enchentes": (
+                "O Rio Parnaíba forma a divisa natural entre Piauí e Maranhão. "
+                "Suas cheias sazonais beneficiam a agricultura, mas também causam "
+                "alagamentos em cidades ribeirinhas como Floriano."
+            ),
+            "periodo_critico": "Janeiro a Maio",
+            "using_fallback": True
+        }
+
     # Rio Genérico — dados determinísticos por nome para evitar repetição
     else:
         seed = sum(ord(c) for c in nome) + len(nome) * 31
-        comp = 30 + (seed * 7) % 770
+        comp = 100 + (seed * 13) % 2400
         areas_map = [
             f"Margens urbanas de {cidade}",
             f"Cotas baixas de {cidade}",
