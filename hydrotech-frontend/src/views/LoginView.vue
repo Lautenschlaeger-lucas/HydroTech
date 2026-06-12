@@ -34,31 +34,6 @@
             <span class="live-time">{{ currentTime }}</span>
           </div>
 
-          <div class="gauge-section">
-            <div class="gauge-container">
-              <svg class="gauge-svg" viewBox="0 0 140 140">
-                <defs>
-                  <linearGradient id="gaugeFill" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="#06B6D4" />
-                    <stop offset="100%" stop-color="#3B82F6" />
-                  </linearGradient>
-                </defs>
-                <circle cx="70" cy="70" r="58" fill="none" stroke="rgba(59,130,246,0.08)" stroke-width="8" />
-                <circle cx="70" cy="70" r="58" fill="none" stroke="url(#gaugeFill)" stroke-width="8"
-                  stroke-linecap="round"
-                  :stroke-dasharray="364.4"
-                  :stroke-dashoffset="gaugeOffset"
-                  transform="rotate(-90 70 70)" />
-                <circle cx="70" cy="70" r="42" fill="rgba(59,130,246,0.03)" stroke="rgba(59,130,246,0.06)" stroke-width="1" />
-              </svg>
-              <div class="gauge-value">
-                <span class="gauge-number">{{ telemetry.nivel.toFixed(2) }}</span>
-                <span class="gauge-unit">m</span>
-              </div>
-            </div>
-            <div class="gauge-label">NÍVEL DO RIO</div>
-          </div>
-
           <div class="system-grid">
             <div class="sys-card">
               <span class="sys-label">RIOS MONITORADOS</span>
@@ -71,18 +46,6 @@
             <div class="sys-card">
               <span class="sys-label">STATUS</span>
               <span class="sys-value sys-status">{{ sysInfo.status }}</span>
-            </div>
-            <div class="sys-card">
-              <span class="sys-label">SENSORES</span>
-              <span class="sys-value">{{ sysInfo.sensores }}</span>
-            </div>
-          </div>
-
-          <div class="data-stream">
-            <div class="stream-line" v-for="n in 5" :key="n">
-              <span class="stream-time">{{ streamData[n-1].time }}</span>
-              <span class="stream-msg">{{ streamData[n-1].msg }}</span>
-              <span class="stream-val">{{ streamData[n-1].val }}</span>
             </div>
           </div>
         </div>
@@ -230,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -243,61 +206,22 @@ const error = ref('')
 const showSenha = ref(false)
 const remember = ref(true)
 
-// Live telemetry
-const telemetry = ref({
-  nivel: 3.8
-})
+// System info
 const sysInfo = ref({
   totalRios: '—',
   totalPontos: '—',
-  status: 'OPERACIONAL',
-  sensores: '—'
+  status: 'OPERACIONAL'
 })
 const currentTime = ref('')
 const uptime = ref('00:00:00')
 const signalStrength = ref('Excelente')
 
-let telemetryTimer
 let uptimeSeconds = 0
-
-const gaugePercent = computed(() => {
-  const min = 2.0, max = 6.0
-  return Math.max(0, Math.min(100, ((telemetry.value.nivel - min) / (max - min)) * 100))
-})
-
-const gaugeOffset = computed(() => {
-  const circ = 2 * Math.PI * 58
-  return circ - (circ * gaugePercent.value / 100)
-})
 
 const signalClass = computed(() => {
   if (signalStrength.value === 'Excelente') return 'status-green'
   if (signalStrength.value === 'Bom') return 'status-yellow'
   return 'status-red'
-})
-
-const streamData = computed(() => {
-  const now = new Date()
-  const nivel = telemetry.value.nivel
-  const status = nivel > 4.5 ? 'EMERGÊNCIA' : nivel > 3.5 ? 'ALERTA' : nivel > 2.5 ? 'ATENÇÃO' : 'NORMAL'
-  const times = []
-  for (let i = 5; i > 0; i--) {
-    const t = new Date(now.getTime() - i * 7000)
-    const msgs = ['Leitura de nível', 'Transmissão de dados', 'Varredura de sensores', 'Satélite OK', 'Batch processado']
-    const vals = [
-      `${nivel.toFixed(2)}m — ${status}`,
-      `${(nivel - 0.1 + Math.random() * 0.2).toFixed(2)}m`,
-      `✓ ${3 + Math.floor(Math.random() * 2)} sensores`,
-      `Latência ${(80 + Math.random() * 120).toFixed(0)}ms`,
-      `${(10 + Math.random() * 15).toFixed(1)}s`
-    ]
-    times.push({
-      time: t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      msg: msgs[i-1],
-      val: vals[i-1]
-    })
-  }
-  return times
 })
 
 const particleStyle = (i) => {
@@ -407,11 +331,9 @@ onMounted(async () => {
     sysInfo.value.totalRios = rios.length
     const todosPontos = await Promise.all(rios.map(r => api.getPontosRiscoPublico(r.id).catch(() => ({ data: [] }))))
     sysInfo.value.totalPontos = todosPontos.reduce((acc, p) => acc + p.data.length, 0)
-    sysInfo.value.sensores = `${sysInfo.value.totalPontos * 2}+`
   } catch {
     sysInfo.value.totalRios = '—'
     sysInfo.value.totalPontos = '—'
-    sysInfo.value.sensores = '—'
   }
 
   const updateTime = () => {
@@ -419,11 +341,6 @@ onMounted(async () => {
   }
   updateTime()
   setInterval(updateTime, 1000)
-
-  telemetryTimer = setInterval(() => {
-    telemetry.value.nivel += (Math.random() - 0.5) * 0.06
-    telemetry.value.nivel = Math.max(2.0, Math.min(6.0, +telemetry.value.nivel.toFixed(2)))
-  }, 6000)
 
   setInterval(() => {
     uptimeSeconds++
@@ -441,9 +358,7 @@ onMounted(async () => {
   }, 8000)
 })
 
-onUnmounted(() => {
-  if (telemetryTimer) clearInterval(telemetryTimer)
-})
+
 </script>
 
 <style scoped>
@@ -696,62 +611,6 @@ onUnmounted(() => {
   color: rgba(148, 163, 184, 0.4);
 }
 
-/* ── Gauge ── */
-
-.gauge-section {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.gauge-container {
-  position: relative;
-  width: 200px;
-  height: 200px;
-}
-
-.gauge-svg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.1));
-}
-
-.gauge-value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.gauge-number {
-  font-size: 2.2rem;
-  font-weight: 800;
-  color: #F1F5F9;
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.gauge-unit {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: rgba(148, 163, 184, 0.6);
-  letter-spacing: 0.1em;
-  margin-top: 2px;
-}
-
-.gauge-label {
-  font-size: 0.6rem;
-  font-weight: 700;
-  color: rgba(148, 163, 184, 0.35);
-  letter-spacing: 0.15em;
-  text-align: center;
-  padding-top: 4px;
-}
-
 /* ── System Info Grid ── */
 
 .system-grid {
@@ -797,45 +656,6 @@ onUnmounted(() => {
   font-weight: 700;
   color: #10B981;
   letter-spacing: 0.08em;
-}
-
-/* ── Data Stream ── */
-
-.data-stream {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 320px;
-}
-
-.stream-line {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 0.68rem;
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  color: rgba(148, 163, 184, 0.4);
-  transition: background 0.2s;
-}
-
-.stream-line:hover {
-  background: rgba(59, 130, 246, 0.04);
-  color: rgba(148, 163, 184, 0.6);
-}
-
-.stream-time {
-  color: rgba(148, 163, 184, 0.25);
-  min-width: 66px;
-}
-
-.stream-msg {
-  flex: 1;
-}
-
-.stream-val {
-  color: rgba(148, 163, 184, 0.5);
 }
 
 /* ══════════════ LOGIN CARD (RIGHT) ══════════════ */
