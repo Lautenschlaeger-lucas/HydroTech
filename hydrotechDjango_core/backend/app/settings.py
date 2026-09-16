@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'usuarios',
     'rios',
+    'sensores',
 ]
 
 REST_FRAMEWORK = {

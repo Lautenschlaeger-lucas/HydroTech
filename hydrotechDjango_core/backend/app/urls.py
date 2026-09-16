@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from usuarios.views import (
     UsuarioCreatedListView,
@@ -47,5 +47,7 @@ urlpatterns = [
     path('publico/rios/<int:pk>/descricao-gemini/', RiosGeminiDescriptionView.as_view(), name='rios-gemini-description-publico'),
     path('publico/summary/', PublicSummaryView.as_view(), name='public-summary'),
     path('health/', HealthCheckView.as_view(), name='health-check'),
+
+    path('sensores/', include('sensores.urls')),
 ]
 
