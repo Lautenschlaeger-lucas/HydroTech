@@ -154,7 +154,7 @@ def test_ors_manda_as_zonas_como_poligonos(monkeypatch):
 
     poligonos = enviado["corpo"]["options"]["avoid_polygons"]
     assert poligonos["type"] == "MultiPolygon" and len(poligonos["coordinates"]) == 1
-    assert enviado["url"].endswith("/driving-car/geojson")
+    assert enviado["url"] == "https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson"
     assert enviado["headers"]["Authorization"] == "chave-teste"
     assert enviado["corpo"]["coordinates"][0] == [ORIGEM[1], ORIGEM[0]]  # GeoJSON é [lng, lat]
     assert rota["distancia_m"] == 1500 and rota["duracao_s"] == 901

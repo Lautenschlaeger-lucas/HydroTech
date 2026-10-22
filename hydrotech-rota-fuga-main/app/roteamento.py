@@ -58,7 +58,7 @@ async def _rota_ors(origem, destino, modo, zonas):
             "type": "MultiPolygon",
             "coordinates": [[geo.circulo_poligono(z["lat"], z["lng"], z["raio_m"])] for z in zonas],
         }}
-    url = f"https://api.openrouteservice.org/v2/directions/{config.ORS_PERFIS[modo]}/geojson"
+    url = f"https://api.heigit.org/openrouteservice/v2/directions/{config.ORS_PERFIS[modo]}/geojson"
 
     async with httpx.AsyncClient(timeout=config.TIMEOUT_ROTA_S) as cliente:
         for espera in (1.2, 2.5, None):
