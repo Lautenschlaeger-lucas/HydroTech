@@ -1,4 +1,6 @@
-# HydroTech Backend - Pronto para Produção ✓
+# HydroTech Backend — protótipo acadêmico
+
+> Para instalação e integração atuais, use o [README principal](../../readme.md) e o [handoff do backend](../../docs/HANDOFF_BACKEND.md). Este documento contém notas históricas; a implantação não foi validada como serviço de emergência. O `docker-compose.yml` agora exige `SECRET_KEY` e `POSTGRES_PASSWORD` no ambiente.
 
 Backend Django completo e otimizado para a aplicação HydroTech.
 

@@ -87,9 +87,7 @@ import { useRouter, useRoute } from 'vue-router'
 const router = useRouter()
 const route = useRoute()
 
-const isMinimalNav = computed(() => {
-  return ['/login', '/registro', '/monitoramento', '/minha-conta'].includes(route.path)
-})
+const isMinimalNav = computed(() => route.path !== '/')
 const isLoggedIn = ref(!!localStorage.getItem('user_token'))
 const userName = ref(localStorage.getItem('user_name') || 'Usuário')
 const isAdmin = ref(false)

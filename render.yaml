@@ -15,12 +15,6 @@ services:
         value: "https://hydrotech.vercel.app,http://localhost:5173"
       - key: FRONTEND_URL
         value: "https://hydrotech.vercel.app"
-      - key: ADMIN_EMAIL
-        value: "admin@hydrotech.com"
-      - key: ADMIN_PASSWORD
-        value: "HydroTech@2026"
-      - key: ADMIN_NOME
-        value: "Administrador HydroTech"
       - key: DATABASE_ENGINE
         value: "django.db.backends.postgresql"
       - key: DATABASE_NAME

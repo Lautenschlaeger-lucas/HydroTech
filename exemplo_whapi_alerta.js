@@ -1,19 +1,13 @@
-const https = require('https');
+﻿const https = require('https');
 
-// Token de acesso da API do Whapi.Cloud (Sandbox)
-const WHAPI_TOKEN = 'FkpTR0248mbkuRZDc8HpqUsusJmHlxJg';
+// Exemplo isolado: configure estas variáveis apenas para um teste autorizado.
+const WHAPI_TOKEN = process.env.WHAPI_TOKEN || '';
 
 // Nível crítico (X) para disparar o alerta
 const NIVEL_CRITICO = 5.0;
 
-// Lista de contatos autorizados no Sandbox
-// Formato: DDI + DDD + Número (ex: 5511999999999)
-const CONTATOS = [
-  '5519992544874',
-  '5519997490041',
-  '5519996161210',
-  '5519996290762'
-];
+// Contatos autorizados, separados por vírgula, com DDI e DDD.
+const CONTATOS = (process.env.WHAPI_CONTATOS || '').split(',').map(numero => numero.trim()).filter(Boolean);
 
 /**
  * Função para enviar mensagem de WhatsApp via Whapi.Cloud
@@ -70,6 +64,10 @@ function verificarEnchente(nomeRio, nivelEnchente) {
   console.log(`\nVerificando nível do ${nomeRio}: ${nivelEnchente}m (Nível crítico: ${NIVEL_CRITICO}m)`);
 
   if (nivelEnchente >= NIVEL_CRITICO) {
+    if (!WHAPI_TOKEN || CONTATOS.length === 0) {
+      console.log('Simulação local: envio desativado. Configure WHAPI_TOKEN e WHAPI_CONTATOS para um teste autorizado.');
+      return;
+    }
     console.log(`⚠️ Nível crítico atingido no ${nomeRio}! Disparando alertas...`);
 
     const mensagemAlerta = `⚠️ ALERTA: O nível do *${nomeRio}* atingiu ${nivelEnchente}m, nível crítico! Evite áreas de risco nas proximidades.`;

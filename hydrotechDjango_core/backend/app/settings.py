@@ -14,6 +14,7 @@ import os
 import logging
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -23,10 +24,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-key-not-for-production-use-only')
+DEV_SECRET_KEY = 'django-insecure-dev-key-not-for-production-use-only'
+SECRET_KEY = os.getenv('SECRET_KEY', DEV_SECRET_KEY)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
+
+if not DEBUG and (SECRET_KEY == DEV_SECRET_KEY or SECRET_KEY.startswith('troque-por-')):
+    raise ImproperlyConfigured('Configure SECRET_KEY exclusiva antes de iniciar o HydroTech com DEBUG=False.')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 

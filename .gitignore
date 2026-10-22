@@ -22,6 +22,8 @@ logs/
 
 # Environment variables (contém chaves secretas)
 .env
+.env.*
+!.env.example
 
 # Node.js
 node_modules/
@@ -43,4 +45,13 @@ Thumbs.db
 # Temporary files
 create_admin.py
 .neon
-.env.local
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+coverage/
+cache/
+*.local
+*.tmp
+*.bak
+*.log

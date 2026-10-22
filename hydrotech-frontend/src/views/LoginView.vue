@@ -193,7 +193,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 
@@ -217,6 +217,9 @@ const uptime = ref('00:00:00')
 const signalStrength = ref('Excelente')
 
 let uptimeSeconds = 0
+let clockTimer = null
+let signalTimer = null
+let disposed = false
 
 const signalClass = computed(() => {
   if (signalStrength.value === 'Excelente') return 'status-green'
@@ -327,33 +330,38 @@ onMounted(async () => {
 
   try {
     const res = await api.getPublicSummary()
+    if (disposed) return
     sysInfo.value.totalRios = res.data.total_rios
     sysInfo.value.totalPontos = res.data.total_pontos
   } catch {
+    if (disposed) return
     sysInfo.value.totalRios = '—'
     sysInfo.value.totalPontos = '—'
   }
 
-  const updateTime = () => {
+  const updateClock = () => {
     currentTime.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
-  updateTime()
-  setInterval(updateTime, 1000)
-
-  setInterval(() => {
     uptimeSeconds++
     const h = String(Math.floor(uptimeSeconds / 3600)).padStart(2, '0')
     const m = String(Math.floor((uptimeSeconds % 3600) / 60)).padStart(2, '0')
     const s = String(uptimeSeconds % 60).padStart(2, '0')
     uptime.value = `${h}:${m}:${s}`
-  }, 1000)
+  }
+  currentTime.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  clockTimer = setInterval(updateClock, 1000)
 
   const signals = ['Excelente', 'Excelente', 'Excelente', 'Bom', 'Excelente']
   let sigIdx = 0
-  setInterval(() => {
+  signalTimer = setInterval(() => {
     signalStrength.value = signals[sigIdx % signals.length]
     sigIdx++
   }, 8000)
+})
+
+onUnmounted(() => {
+  disposed = true
+  if (clockTimer) clearInterval(clockTimer)
+  if (signalTimer) clearInterval(signalTimer)
 })
 
 
@@ -409,7 +417,6 @@ onMounted(async () => {
     radial-gradient(circle at 65% 55%, transparent 0%, transparent 25%, rgba(59,130,246,0.05) 27%, transparent 30%),
     radial-gradient(circle at 45% 75%, transparent 0%, transparent 40%, rgba(6,182,212,0.04) 42%, transparent 45%);
   background-size: 300px 300px;
-  animation: topoDrift 60s ease-in-out infinite;
 }
 
 @keyframes topoDrift {
@@ -428,22 +435,18 @@ onMounted(async () => {
 [data-theme='dark'] .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  will-change: transform;
 }
 
 [data-theme='dark'] .orb-1 {
   width: 500px; height: 500px;
   background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 60%);
   top: -10%; left: -5%;
-  animation: orbFloat1 25s ease-in-out infinite;
 }
 
 [data-theme='dark'] .orb-2 {
   width: 400px; height: 400px;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
   bottom: -10%; right: 5%;
-  animation: orbFloat2 30s ease-in-out infinite;
 }
 
 .orb-3 {
@@ -522,12 +525,10 @@ onMounted(async () => {
 
 [data-theme='dark'] .wave-1 {
   fill: rgba(6, 182, 212, 0.04);
-  animation: waveSlide 10s linear infinite;
 }
 
 [data-theme='dark'] .wave-2 {
   fill: rgba(59, 130, 246, 0.03);
-  animation: waveSlide 15s linear infinite reverse;
 }
 
 @keyframes waveSlide {

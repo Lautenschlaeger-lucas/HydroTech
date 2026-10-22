@@ -1,12 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import DashboardView from '../views/DashboardView.vue'
-import RiosView from '../views/RiosView.vue'
-import UsuariosView from '../views/UsuariosView.vue'
-import LoginView from '../views/LoginView.vue'
-import LandingPage from '@/views/LandingPage.vue'
-import RegistroView from '@/views/RegistroView.vue'
-import MonitoramentoView from '@/views/MonitoramentoView.vue'
-import MinhaContaView from '@/views/MinhaContaView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,42 +6,47 @@ const router = createRouter({
     {
     path: '/registro',
     name: 'registro',
-    component: RegistroView
+    component: () => import('@/views/RegistroView.vue')
     },
     {
       path: '/',
       name: 'home',
-      component: LandingPage
+      component: () => import('@/views/LandingPage.vue')
     },
     {
       path: '/minha-conta',
       name: 'minha-conta',
-      component: MinhaContaView
+      component: () => import('@/views/MinhaContaView.vue')
     },
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: DashboardView
+      component: () => import('@/views/DashboardView.vue')
     },
     {
       path: '/rios',
       name: 'rios',
-      component: RiosView
+      component: () => import('@/views/RiosView.vue')
     },
     {
       path: '/usuarios',
       name: 'usuarios',
-      component: UsuariosView
+      component: () => import('@/views/UsuariosView.vue')
     },
     {
       path: '/login',
       name: 'login',
-      component: LoginView
+      component: () => import('@/views/LoginView.vue')
     },
     {
       path: '/monitoramento',
       name: 'monitoramento',
-      component: MonitoramentoView
+      component: () => import('@/views/MonitoramentoView.vue')
+    },
+    {
+      path: '/rota-de-fuga',
+      name: 'rota-de-fuga',
+      component: () => import('@/views/RotaFugaView.vue')
     }
   ]
 })

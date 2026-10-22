@@ -1,17 +1,31 @@
 <template>
   <div class="register-page">
+    <div class="register-ambient" aria-hidden="true"></div>
     <div class="register-wrapper">
+      <section class="register-intro" aria-label="Sobre o HydroTech">
+        <span class="intro-status"><span class="intro-dot"></span> HYDROTECH · DEMONSTRAÇÃO ACADÊMICA</span>
+        <h2>Seu acesso ao monitoramento começa aqui.</h2>
+        <p>Acompanhe os rios cadastrados, organize seus pontos favoritos e explore os alertas simulados em um só lugar.</p>
+        <div class="intro-features">
+          <div><span class="feature-icon" aria-hidden="true">↗</span><span><strong>Monitore os pontos</strong><small>Consulte os gráficos e as informações cadastradas.</small></span></div>
+          <div><span class="feature-icon" aria-hidden="true">☆</span><span><strong>Personalize seu acesso</strong><small>Salve favoritos e acompanhe os alertas simulados.</small></span></div>
+        </div>
+      </section>
       <div class="register-card">
-
-        <!-- Header -->
-        <div class="register-header">
-          <div class="register-logo">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-            </svg>
+        <div class="register-brand-row">
+          <div class="register-brand">
+            <span class="register-brand-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="rgba(255,255,255,0.08)"/><path d="M12 6v12"/><path d="M6 12h12"/></svg>
+            </span>
+            <span class="register-brand-text"><strong>HydroTech</strong><small>MONITORAMENTO HIDROLÓGICO</small></span>
           </div>
+          <span class="register-badge">CADASTRO</span>
+        </div>
+
+        <div class="register-header">
+          <span class="register-eyebrow">NOVO ACESSO</span>
           <h1>Criar sua conta</h1>
-          <p>Preencha os dados para acessar o monitoramento</p>
+          <p>Informe e-mail ou telefone e crie sua senha para acompanhar o monitoramento.</p>
         </div>
 
         <!-- Form -->
@@ -22,7 +36,7 @@
             <label for="reg-nome">Nome Completo</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              <input id="reg-nome" v-model="form.nome" type="text" placeholder="Seu nome completo" />
+              <input id="reg-nome" v-model="form.nome" type="text" placeholder="Seu nome completo" autocomplete="name" />
             </div>
           </div>
 
@@ -31,7 +45,7 @@
             <label for="reg-email">E-mail</label>
             <div class="input-wrapper">
               <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <input id="reg-email" v-model="form.email" type="email" placeholder="seu@email.com" />
+              <input id="reg-email" v-model="form.email" type="email" placeholder="seu@email.com" autocomplete="email" />
             </div>
           </div>
 
@@ -41,7 +55,7 @@
               <label for="reg-telefone">Telefone</label>
               <div class="input-wrapper">
                 <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <input id="reg-telefone" :value="form.telefone" @input="onPhoneInput" type="tel" inputmode="numeric" placeholder="(00) 00000-0000" />
+                <input id="reg-telefone" :value="form.telefone" @input="onPhoneInput" type="tel" inputmode="numeric" placeholder="(00) 00000-0000" autocomplete="tel" />
               </div>
             </div>
             <div class="form-group">
@@ -59,8 +73,8 @@
               <label for="reg-senha">Senha</label>
               <div class="input-wrapper">
                 <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input id="reg-senha" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder="Crie uma senha" />
-                <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" tabindex="-1">
+                <input id="reg-senha" v-model="form.senha" :type="showSenha ? 'text' : 'password'" placeholder="Crie uma senha" autocomplete="new-password" />
+                <button type="button" class="btn-toggle-pw" @click="showSenha = !showSenha" :aria-label="showSenha ? 'Ocultar senha' : 'Mostrar senha'">
                   <svg v-if="!showSenha" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
@@ -70,8 +84,8 @@
               <label for="reg-confirmar">Confirmar Senha</label>
               <div class="input-wrapper">
                 <svg class="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <input id="reg-confirmar" v-model="form.confirmarSenha" :type="showConfirmar ? 'text' : 'password'" placeholder="Repita a senha" />
-                <button type="button" class="btn-toggle-pw" @click="showConfirmar = !showConfirmar" tabindex="-1">
+                <input id="reg-confirmar" v-model="form.confirmarSenha" :type="showConfirmar ? 'text' : 'password'" placeholder="Repita a senha" autocomplete="new-password" />
+                <button type="button" class="btn-toggle-pw" @click="showConfirmar = !showConfirmar" :aria-label="showConfirmar ? 'Ocultar confirmação da senha' : 'Mostrar confirmação da senha'">
                   <svg v-if="!showConfirmar" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                   <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                 </button>
@@ -108,12 +122,12 @@
           </ul>
 
           <!-- Messages -->
-          <p class="error-msg" v-if="error">
+          <p class="error-msg" v-if="error" role="alert">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
             {{ error }}
           </p>
 
-          <p class="success-msg" v-if="success">
+          <p class="success-msg" v-if="success" role="status">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             {{ success }}
           </p>
@@ -126,7 +140,8 @@
         </form>
 
         <div class="register-footer">
-          <p>Já tem uma conta? <router-link to="/login">Faça Login</router-link></p>
+          <p>Já tem uma conta? <router-link to="/login">Entrar</router-link></p>
+          <span class="register-footer-note"><span></span> Acesso ao monitoramento</span>
         </div>
 
       </div>
@@ -271,90 +286,129 @@ const handleRegistro = async () => {
 
 <style scoped>
 .register-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 58px);
   background: var(--bg-primary);
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.register-ambient {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 16% 42%, rgba(6, 182, 212, .08), transparent 42%),
+    radial-gradient(ellipse at 82% 18%, rgba(59, 130, 246, .06), transparent 38%),
+    linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+}
+
+.register-ambient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: .35;
+  background-image: linear-gradient(rgba(59, 130, 246, .05) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, .05) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
 }
 
 .register-wrapper {
-  min-height: calc(100vh - 72px);
-  display: flex;
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1200px);
+  min-height: calc(100vh - 58px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
   align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
+  gap: clamp(32px, 6vw, 88px);
+  padding: 32px;
 }
+
+.register-intro { max-width: 440px; }
+.intro-status { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: .7rem; font-weight: 800; letter-spacing: .1em; }
+.intro-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--status-active); box-shadow: 0 0 8px rgba(16,185,129,.35); }
+.register-intro h2 { color: var(--text-primary); font-size: clamp(2rem, 3vw, 3rem); line-height: 1.12; letter-spacing: -.035em; margin: 22px 0 14px; }
+.register-intro > p { color: var(--text-secondary); font-size: .96rem; line-height: 1.65; max-width: 390px; }
+.intro-features { display: grid; gap: 10px; margin-top: 30px; }
+.intro-features > div { display: flex; align-items: center; gap: 13px; padding: 15px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 11px; }
+.feature-icon { flex: 0 0 34px; width: 34px; height: 34px; display: grid; place-items: center; color: var(--accent); background: var(--accent-soft); border-radius: 8px; font-size: 1.15rem; }
+.intro-features strong, .intro-features small { display: block; }
+.intro-features strong { color: var(--text-primary); font-size: .85rem; margin-bottom: 3px; }
+.intro-features small { color: var(--text-muted); font-size: .76rem; line-height: 1.35; }
 
 .register-card {
-  background: var(--bg-secondary);
+  position: relative;
+  background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  padding: 48px 44px;
+  border-radius: 16px;
   width: 100%;
   max-width: 560px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  animation: fadeInUp 0.4s ease-out;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+  animation: fadeInUp .45s ease-out;
 }
 
-/* Header */
+.register-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--accent-gradient); }
+.register-brand-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-bottom: 1px solid var(--border-light); }
+.register-brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.register-brand-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border-radius: 10px; color: #fff; background: var(--accent-gradient); }
+.register-brand-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.register-brand-text strong { color: var(--text-primary); font-size: 1rem; line-height: 1.2; }
+.register-brand-text small { color: var(--accent); font-size: .58rem; font-weight: 700; letter-spacing: .13em; }
+.register-badge { color: var(--text-muted); background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: 99px; padding: 4px 10px; font-size: .62rem; font-weight: 700; letter-spacing: .06em; }
+
 .register-header {
-  text-align: center;
+  padding: 20px 28px 0;
 }
 
-.register-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-lg);
-  background: var(--accent-soft);
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  margin-bottom: 20px;
-}
+.register-eyebrow { color: var(--accent); opacity: .8; font-size: .62rem; font-weight: 800; letter-spacing: .16em; }
 
 .register-header h1 {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: 1.45rem;
+  font-weight: 750;
   color: var(--text-primary);
-  margin-bottom: 6px;
+  margin: 4px 0 5px;
 }
 
 .register-header p {
-  color: var(--text-muted);
-  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-size: .83rem;
+  line-height: 1.45;
+  margin: 0;
 }
 
 /* Form Styles */
 .register-form {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
+  padding: 20px 28px 24px;
 }
 
 .form-row {
   display: flex;
-  gap: 16px;
+  gap: 14px;
 }
 
 .form-row .form-group {
   flex: 1;
+  min-width: 0;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .form-group label {
-  font-size: 0.78rem;
+  font-size: .66rem;
   font-weight: 700;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: .08em;
   margin-left: 2px;
 }
 
@@ -373,37 +427,42 @@ const handleRegistro = async () => {
 
 .input-wrapper input {
   width: 100%;
-  padding: 12px 44px 12px 42px;
-  background: var(--bg-primary);
+  min-height: 44px;
+  padding: 11px 44px 11px 42px;
+  background: var(--bg-secondary);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   color: var(--text-primary);
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
+  font-size: .9rem;
+  font-family: inherit;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
 .input-wrapper input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  background: var(--bg-tertiary);
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, .08);
 }
 
 .input-wrapper input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.6;
+  color: var(--text-secondary);
+  opacity: .72;
 }
 
 /* Password Toggle Button */
 .btn-toggle-pw {
   position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 5px;
+  top: 0;
+  bottom: 0;
+  margin-block: auto;
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 4px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -412,8 +471,10 @@ const handleRegistro = async () => {
 }
 .btn-toggle-pw:hover {
   color: var(--text-primary);
-  transform: translateY(-50%);
 }
+.btn-toggle-pw:hover:not(:disabled),
+.btn-toggle-pw:active:not(:disabled) { transform: none; }
+.btn-toggle-pw:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 
 /* Password Strength */
 .pw-strength {
@@ -492,16 +553,17 @@ const handleRegistro = async () => {
   justify-content: center;
   gap: 10px;
   padding: 14px;
-  background: var(--accent);
+  background: var(--accent-gradient);
   color: white;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: 8px;
   font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   margin-top: 4px;
 }
+.btn-register:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 .btn-register:hover:not(:disabled) {
   transform: translateY(-2px);
@@ -550,15 +612,18 @@ const handleRegistro = async () => {
 
 /* Footer */
 .register-footer {
-  text-align: center;
-  margin-top: 4px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 28px;
+  border-top: 1px solid var(--border-light);
 }
 
 .register-footer p {
-  font-size: 0.9rem;
+  font-size: .82rem;
   color: var(--text-muted);
+  margin: 0;
 }
 
 .register-footer a {
@@ -571,6 +636,9 @@ const handleRegistro = async () => {
 .register-footer a:hover {
   text-decoration: underline;
 }
+.register-footer a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+.register-footer-note { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: .68rem; white-space: nowrap; }
+.register-footer-note span { width: 6px; height: 6px; border-radius: 50%; background: var(--status-active); }
 
 /* Animations */
 @keyframes fadeInUp {
@@ -582,16 +650,28 @@ const handleRegistro = async () => {
   to { opacity: 1; }
 }
 
+@media (max-width: 1024px) {
+  .register-intro { display: none; }
+  .register-wrapper { display: flex; justify-content: center; padding: 30px 20px; }
+}
+
 @media (max-width: 600px) {
-  .register-card {
-    padding: 32px 24px;
-  }
-  .form-row {
-    flex-direction: column;
-    gap: 18px;
-  }
-  .pw-requirements {
-    grid-template-columns: 1fr;
-  }
+  .register-wrapper { padding: 18px 12px; }
+  .register-brand-row { padding: 14px 18px; }
+  .register-header { padding: 18px 18px 0; }
+  .register-form { padding: 18px; gap: 13px; }
+  .register-footer { padding: 15px 18px; flex-wrap: wrap; }
+  .form-row { flex-direction: column; gap: 13px; }
+  .pw-requirements { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 380px) {
+  .register-badge, .register-footer-note { display: none; }
+  .pw-requirements { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-card, .error-msg, .success-msg { animation: none; }
+  .btn-register, .input-wrapper input { transition: none; }
 }
 </style>

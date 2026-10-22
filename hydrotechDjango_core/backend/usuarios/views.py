@@ -37,7 +37,7 @@ class UsuarioCreatedListView(generics.ListCreateAPIView):
         if not getattr(user, 'is_staff', False) and not getattr(user, 'is_defesa_civil', False):
             serializer.validated_data.pop('is_defesa_civil', None)
         serializer.save()
-        logger.info(f'Novo usuário criado: {serializer.instance.email}')
+        logger.info('Novo usuário criado: %s', serializer.instance.id)
 
 
 class UsuarioRetriveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
@@ -63,12 +63,12 @@ class UsuarioRetriveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         if not getattr(user, 'is_staff', False) and not getattr(user, 'is_defesa_civil', False):
             serializer.validated_data.pop('is_defesa_civil', None)
         serializer.save()
-        logger.info(f'Usuário atualizado: {serializer.instance.email}')
+        logger.info('Usuário atualizado: %s', serializer.instance.id)
 
     def perform_destroy(self, instance):
-        email = instance.email
+        user_id = instance.id
         instance.delete()
-        logger.warning(f'Usuário deletado: {email}')
+        logger.warning('Usuário deletado: %s', user_id)
 
 
 class UsuarioMeView(APIView):
@@ -90,6 +90,7 @@ class UsuarioMeView(APIView):
         try:
             serializer = UsuarioSerializer(request.user, data=request.data, partial=True)
             if serializer.is_valid():
+                serializer.validated_data.pop('is_defesa_civil', None)
                 serializer.save()
                 if request.data.get('senha'):
                     request.user.deve_alterar_senha = False
@@ -135,7 +136,7 @@ class AuthLoginView(APIView):
             )
 
         if not user.check_password(senha):
-            logger.warning(f'Tentativa de login com senha incorreta: {email or telefone}')
+            logger.warning('Tentativa de login com senha incorreta')
             return Response(
                 {'detail': 'Credenciais inválidas.'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -144,7 +145,7 @@ class AuthLoginView(APIView):
         try:
             refresh = RefreshToken.for_user(user)
             serializer = UsuarioSerializer(user)
-            logger.info(f'Login bem-sucedido: {email or telefone}')
+            logger.info('Login bem-sucedido: usuário %s', user.id)
             return Response({
                 'access': str(refresh.access_token),
                 'refresh': str(refresh),
@@ -165,36 +166,12 @@ class AuthRegisterView(APIView):
         try:
             serializer = UsuarioSerializer(data=request.data)
             if serializer.is_valid():
+                serializer.validated_data.pop('is_defesa_civil', None)
                 user = serializer.save()
                 
-                telefone = user.telefone
-                if telefone:
-                    import re, os
-                    cleaned_tel = re.sub(r'\D', '', telefone)
-                    if cleaned_tel:
-                        if len(cleaned_tel) <= 11:
-                            cleaned_tel = '55' + cleaned_tel
-                        elif not cleaned_tel.startswith('55'):
-                            cleaned_tel = '55' + cleaned_tel
-                            
-                        filepath = r'C:\Users\ricardo\Desktop\HydroTech-main\exemplo_whapi_alerta.js'
-                        try:
-                            if os.path.exists(filepath):
-                                with open(filepath, 'r', encoding='utf-8') as f:
-                                    content = f.read()
-                                if cleaned_tel not in content:
-                                    if 'const CONTATOS = [\n' in content:
-                                        content = content.replace('const CONTATOS = [\n', f"const CONTATOS = [\n  '{cleaned_tel}',\n")
-                                    elif 'const CONTATOS = [\r\n' in content:
-                                        content = content.replace('const CONTATOS = [\r\n', f"const CONTATOS = [\r\n  '{cleaned_tel}',\r\n")
-                                    with open(filepath, 'w', encoding='utf-8') as f:
-                                        f.write(content)
-                        except Exception as ex:
-                            logger.error(f'Erro ao atualizar whapi_alerta.js: {ex}')
-
                 refresh = RefreshToken.for_user(user)
                 response_data = UsuarioSerializer(user).data
-                logger.info(f'Novo usuário registrado: {user.email}')
+                logger.info('Novo usuário registrado: %s', user.id)
                 return Response({
                     'access': str(refresh.access_token),
                     'refresh': str(refresh),

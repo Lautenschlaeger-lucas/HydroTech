@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="mon-page">
     <!-- Static Gradient Background -->
     <div class="mesh-bg"></div>
@@ -13,9 +13,13 @@
           <span>HydroTech <b>Monitoramento Público</b></span>
         </div>
         <div class="mon-meta">
-          <span class="live-pill"><span class="live-dot"></span>AO VIVO · 10s</span>
+          <span class="live-pill"><span class="live-dot"></span>SIMULAÇÃO · 10s</span>
           <span v-if="lastUpdate" class="upd-time">{{ lastUpdate }}</span>
-          <router-link to="/" class="back-lnk">← Início</router-link>
+          <router-link to="/rota-de-fuga" class="back-lnk back-lnk--route">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6a4 4 0 0 0 4-4v-6"/></svg>
+            Mapa de rotas
+          </router-link>
+          <router-link to="/" class="back-lnk back-lnk--home">← Início</router-link>
         </div>
       </div>
     </header>
@@ -38,6 +42,8 @@
         </div>
       </div>
     </div>
+
+    <p class="simulation-note">Demonstração acadêmica: níveis, enchentes e alertas exibidos nesta página são simulados.</p>
 
     <!-- Loading Skeletons -->
     <div v-if="loading" class="charts-grid" style="padding: 24px;">
@@ -70,13 +76,13 @@
               <div>
                 <div class="rio-nome-container">
                   <h2 class="rio-name">{{ rio.nome }}</h2>
-                  <div 
+                  <div
                     class="gemini-hover-trigger"
                     @mouseenter="showGemini(rio.id)"
                     @mouseleave="hideGemini"
                   >
                     ✨ Conheça este rio
-                    
+
                     <transition name="gemini-fade">
                       <div v-if="expandedGemini === rio.id" class="gemini-panel-wrapper" @click.stop>
                         <div v-if="loadingGemini" class="gemini-skeleton">
@@ -105,7 +111,7 @@
                               💡 Simulação
                             </div>
                           </div>
-                          
+
                           <div class="gemini-metrics">
                             <div class="metric-item">
                               <div class="metric-icon">📏</div>
@@ -141,7 +147,7 @@
                             </div>
                           </div>
                         </div>
-                        
+
                         <div v-else class="gemini-error">
                           ❌ Falha ao carregar informações.
                         </div>
@@ -164,7 +170,7 @@
             <div v-else class="charts-grid">
               <div v-for="p in sortedPontos(rio.id)" :key="p.id" class="chart-card" :id="'ponto-' + p.id">
                 <div class="chart-card-hdr">
-                  <div>
+                  <div class="chart-card-heading">
                     <h3 class="chart-card-title">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
                       {{ p.descricao ? (p.descricao.length > 40 ? p.descricao.substring(0,40)+'…' : p.descricao) : 'Sem descrição' }}
@@ -174,7 +180,7 @@
                       {{ rio.nome }} · {{ p.descricao ? (p.descricao.length > 45 ? p.descricao.substring(0,45)+'…' : p.descricao) : 'Sem descrição' }}
                     </p>
                   </div>
-                  <div style="display: flex; gap: 8px; align-items: center;">
+                  <div class="chart-card-actions">
                     <template v-if="!isDefesaCivil">
                       <div class="unauth-wrap" v-if="!isLoggedIn">
                         <button class="abtn abtn-sm abtn--disabled" style="padding: 4px 8px; font-size: 0.7rem;">
@@ -203,12 +209,30 @@
                     </template>
                     <button class="live-badge" :class="{ 'live--flood': floodMap[p.id] }" @click="toggleFlood(p.id)" :title="floodMap[p.id] ? 'Parar simulação de enchente' : 'Simular enchente'">
                       <span class="live-dot" :class="{ 'live-dot--flood': floodMap[p.id] }"></span>
-                      {{ floodMap[p.id] ? 'EXTRAVASANDO' : 'AO VIVO' }}
+                      {{ floodMap[p.id] ? 'ENCHENTE SIMULADA' : 'SIMULAR ENCHENTE' }}
                     </button>
                   </div>
                 </div>
+                <Transition name="escape-reveal" appear>
+                  <router-link
+                    v-if="floodMap[p.id]"
+                    :to="{ path: '/rota-de-fuga', query: { alerta: p.id, auto: 1, foco_lat: p.latitude, foco_lng: p.longitude } }"
+                    class="escape-action"
+                  >
+                    <span class="escape-action-icon" aria-hidden="true">
+                      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="5" cy="18" r="2"/><path d="M7 18h7a5 5 0 0 0 0-10H9"/><path d="m12 5-3 3 3 3"/>
+                      </svg>
+                    </span>
+                    <span class="escape-action-copy">
+                      <strong>Ver rota de fuga</strong>
+                      <small>Escolha sua partida e veja o caminho no mapa</small>
+                    </span>
+                    <span class="escape-action-arrow" aria-hidden="true">→</span>
+                  </router-link>
+                </Transition>
                 <div class="chart-canvas-wrap">
-                  <div :ref="el => setObserverRef(el, p.id)" class="chart-observer">
+                  <div :ref="observerRefFor(p.id)" class="chart-observer">
                     <canvas v-if="visibleCharts.has(p.id)" :ref="el => setChartRef(el, p)"></canvas>
                     <div v-else class="chart-placeholder">
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -246,14 +270,20 @@ const rios = ref([])
 const pontos = ref({})
 const filtroEstado = ref('')
 const lastUpdate = ref('')
-const canvasMap = ref({})
+const canvasMap = {}
 let charts = {}
 let chartLevels = {}
 let ticker = null
 const floodMap = ref({})
 
 const toggleFlood = (pontoId) => {
-  floodMap.value = { ...floodMap.value, [pontoId]: !floodMap.value[pontoId] }
+  const active = !floodMap.value[pontoId]
+  floodMap.value = { ...floodMap.value, [pontoId]: active }
+  sessionStorage.setItem('ht_flood_demo', JSON.stringify(floodMap.value))
+  if (active) {
+    if (!visibleCharts.value.has(pontoId)) visibleCharts.value = new Set([...visibleCharts.value, pontoId])
+    if (charts[pontoId]) tick(pontoId)
+  }
 }
 
 const expandedGemini = ref(null)
@@ -263,10 +293,10 @@ let geminiHoverTimer = null
 
 const showGemini = async (rioId) => {
   if (geminiHoverTimer) clearTimeout(geminiHoverTimer)
-  
+
   geminiHoverTimer = setTimeout(async () => {
     if (expandedGemini.value === rioId) return
-    
+
     expandedGemini.value = rioId
     geminiData.value = null
     loadingGemini.value = true
@@ -363,32 +393,55 @@ const sortedPontos = (rioId) => {
 
 // Lazy Loading com IntersectionObserver
 const visibleCharts = ref(new Set())
+const chartsInView = new Set()
+const observerElements = new Map()
+const observerRefs = new Map()
 let chartObserver = null
 
+const observerRefFor = (pontoId) => {
+  if (!observerRefs.has(pontoId)) observerRefs.set(pontoId, el => setObserverRef(el, pontoId))
+  return observerRefs.get(pontoId)
+}
+
 const setObserverRef = (el, pontoId) => {
-  if (!el) return
+  const previous = observerElements.get(pontoId)
+  if (!el) {
+    if (previous) chartObserver?.unobserve(previous)
+    observerElements.delete(pontoId)
+    chartsInView.delete(pontoId)
+    return
+  }
+  if (previous === el) return
+  if (previous) chartObserver?.unobserve(previous)
   if (!chartObserver) {
     chartObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
+        const id = Number(entry.target.dataset.pontoId)
         if (entry.isIntersecting) {
-          const id = Number(entry.target.dataset.pontoId)
-          visibleCharts.value = new Set([...visibleCharts.value, id])
-          chartObserver.unobserve(entry.target)
+          chartsInView.add(id)
+          if (!visibleCharts.value.has(id)) {
+            visibleCharts.value = new Set([...visibleCharts.value, id])
+          } else {
+            charts[id]?.update('none')
+          }
+        } else {
+          chartsInView.delete(id)
         }
       })
     }, { rootMargin: '100px' })
   }
   el.dataset.pontoId = pontoId
+  observerElements.set(pontoId, el)
   chartObserver.observe(el)
 }
 
 const setChartRef = (el, ponto) => {
   if (el) {
-    const isNew = canvasMap.value[ponto.id] !== el
-    canvasMap.value[ponto.id] = el
+    const isNew = canvasMap[ponto.id] !== el
+    canvasMap[ponto.id] = el
     if (isNew) {
       nextTick(() => {
-        buildChart(ponto)
+        if (canvasMap[ponto.id] === el) buildChart(ponto)
       })
     }
   }
@@ -396,7 +449,7 @@ const setChartRef = (el, ponto) => {
 
 // Igual ao Dashboard Admin
 const buildChart = (ponto) => {
-  const canvas = canvasMap.value[ponto.id]
+  const canvas = canvasMap[ponto.id]
   if (!canvas) return
   if (charts[ponto.id]) charts[ponto.id].destroy()
   const ctx = canvas.getContext('2d')
@@ -409,7 +462,9 @@ const buildChart = (ponto) => {
   const base = (ponto.nivel_base !== null && ponto.nivel_base !== undefined) ? parseFloat(ponto.nivel_base) : (baseMap[ponto.nivel_risco] || 1.0)
   const variance = 0.25
   const labels = Array.from({ length: 15 }, (_, i) => { const d = new Date(); d.setSeconds(d.getSeconds() - (14-i)*10); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) })
-  const data = Array.from({ length: 15 }, () => +(base + (Math.random()*variance*2 - variance)).toFixed(2))
+  const data = floodMap.value[ponto.id]
+    ? Array.from({ length: 15 }, (_, i) => +(Math.max(0, base - 0.6) + i * 0.08).toFixed(2))
+    : Array.from({ length: 15 }, () => +(base + (Math.random()*variance*2 - variance)).toFixed(2))
   const atencao = (ponto.limite_atencao !== null && ponto.limite_atencao !== undefined) ? parseFloat(ponto.limite_atencao) : +(base + 0.5).toFixed(2)
   const alerta = (ponto.limite_alerta !== null && ponto.limite_alerta !== undefined) ? parseFloat(ponto.limite_alerta) : +(base + 0.85).toFixed(2)
   const emergencia = (ponto.limite_emergencia !== null && ponto.limite_emergencia !== undefined) ? parseFloat(ponto.limite_emergencia) : +(base + 1.2).toFixed(2)
@@ -421,11 +476,11 @@ const buildChart = (ponto) => {
   charts[ponto.id] = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: Array.from({ length: 15 }, (_, i) => { const d = new Date(); d.setSeconds(d.getSeconds() - (14-i)*10); return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) }),
+      labels,
       datasets: [
         {
           label: 'Altura do Rio',
-          data: Array.from({ length: 15 }, () => +(base + (Math.random()*variance*2 - variance)).toFixed(2)),
+          data,
           borderColor: accentColor,
           backgroundColor: accentColor + '20',
           borderWidth: 2.5,
@@ -455,38 +510,12 @@ const buildChart = (ponto) => {
   })
 }
 
-// Whapi configuration (Sandbox)
-const WHAPI_TOKEN = 'FkpTR0248mbkuRZDc8HpqUsusJmHlxJg';
-const CONTATOS = ['5519992544874', '5519997490041', '5519996161210', '5519996290762'];
-
-const enviarMensagemWhatsApp = async (to, message) => {
-  try {
-    const response = await fetch('https://gate.whapi.cloud/messages/text', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${WHAPI_TOKEN}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        to: `${to}@s.whatsapp.net`,
-        body: message
-      })
-    });
-    if (response.ok) {
-      console.log(`✅ Alerta enviado para ${to} com sucesso.`);
-    } else {
-      console.error(`❌ Falha ao enviar para ${to}. Status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error(`Erro na requisição para ${to}: ${error.message}`);
-  }
-};
-
-const tick = () => {
+const tick = (pontoId = null) => {
   const label = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
   lastUpdate.value = label
-  Object.entries(charts).forEach(([id, chart]) => {
+  const entries = pontoId === null ? Object.entries(charts) : [[String(pontoId), charts[pontoId]]]
+  entries.forEach(([id, chart]) => {
+    if (!chart) return
     const lvl = chartLevels[id]; if (!lvl) return
     const ds = chart.data.datasets[0]
     const last = parseFloat(ds.data.at(-1))
@@ -501,37 +530,16 @@ const tick = () => {
     chart.data.datasets[2].data.push(chart.data.datasets[2].data[0])
     chart.data.datasets[3].data.push(chart.data.datasets[3].data[0])
     if (chart.data.labels.length > 15) { chart.data.labels.shift(); chart.data.datasets.forEach(d => d.data.shift()) }
-    chart.update('none')
+    if (pontoId !== null || chartsInView.has(Number(id))) chart.update('none')
 
-    // Integração Whapi: Verifica nível e dispara alerta se necessário
+    // A simulação altera apenas o estado local do alerta; não envia mensagens externas.
     const numericId = Number(id);
     if (next >= lvl.emergencia && isAlert(numericId)) {
       if (!lvl.alertado) {
-        lvl.alertado = true; // Marca como alertado para não disparar a cada 10 segundos
-        
-        let pontoDesc = "Ponto Desconhecido";
-        let rioNome = "";
-        
-        // Encontra o nome do Rio e a Descrição do Ponto de Risco
-        Object.entries(pontos.value).forEach(([rId, pts]) => {
-          const pt = pts.find(p => p.id === numericId);
-          if (pt) {
-            pontoDesc = pt.descricao;
-            const r = rios.value.find(rio => rio.id == Number(rId));
-            if (r) rioNome = r.nome;
-          }
-        });
-        
-        const localNome = rioNome ? `${rioNome} - ${pontoDesc}` : pontoDesc;
-        console.log(`⚠️ Nível de emergência atingido em ${localNome}! Disparando alertas via Whapi...`);
-        const mensagemAlerta = `⚠️ *ALERTA HYDROTECH*\nO nível em *${localNome}* atingiu ${next}m, nível de EMERGÊNCIA!\nEvite áreas de risco nas proximidades.`;
-        
-        CONTATOS.forEach(numero => {
-          enviarMensagemWhatsApp(numero, mensagemAlerta);
-        });
+        lvl.alertado = true;
       }
     } else if (next < lvl.emergencia) {
-      lvl.alertado = false; // Reseta o estado quando o nível abaixa do ponto de emergência
+      lvl.alertado = false;
     }
   })
 }
@@ -556,6 +564,7 @@ const syncFavsAndAlerts = async () => {
 }
 
 onMounted(async () => {
+  try { floodMap.value = JSON.parse(sessionStorage.getItem('ht_flood_demo') || '{}') } catch { floodMap.value = {} }
   try {
     const res = await api.getRiosPublico()
     rios.value = Array.isArray(res.data) ? res.data : res.data.results || []
@@ -598,6 +607,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.simulation-note { position: relative; z-index: 2; margin: 12px auto 0; padding: 8px 16px; max-width: 1300px; width: calc(100% - 32px); color: #fbbf24; background: rgba(245, 158, 11, .09); border: 1px solid rgba(245, 158, 11, .25); border-radius: 8px; font-size: .78rem; }
+.escape-action { display: flex; align-items: center; gap: 14px; min-height: 76px; margin: 16px 22px 0; padding: 12px 18px; border: 1px solid #f87171; border-radius: 14px; background: linear-gradient(110deg, #991b1b, #dc2626 65%, #b91c1c); color: #fff; text-decoration: none; box-shadow: 0 8px 24px rgba(220, 38, 38, .25); transition: transform .2s ease, box-shadow .2s ease; }
+.escape-reveal-enter-active { animation: escapeAppear .35s ease-out both; }
+.escape-reveal-leave-active { animation: escapeAppear .2s ease-in reverse both; }
+.escape-action:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(220, 38, 38, .36); }
+.escape-action:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.escape-action-icon { display: grid; place-items: center; width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px; border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.16); animation: escapePulse 2.4s ease-in-out infinite; }
+.escape-action-copy { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
+.escape-action-copy strong { font-size: 1.05rem; font-weight: 900; line-height: 1.2; }
+.escape-action-copy small { font-size: .78rem; line-height: 1.3; color: rgba(255,255,255,.92); }
+.escape-action-arrow { font-size: 1.6rem; font-weight: 700; line-height: 1; transition: transform .2s ease; }
+.escape-action:hover .escape-action-arrow { transform: translateX(4px); }
+@keyframes escapePulse { 50% { transform: scale(1.08); } }
+@keyframes escapeAppear { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 600px) { .escape-action { margin: 12px 12px 0; padding: 12px; gap: 10px; }.escape-action-copy strong { font-size: .98rem; }.escape-action-copy small { font-size: .72rem; }.escape-action-icon { width: 40px; height: 40px; flex-basis: 40px; } }
+@media (prefers-reduced-motion: reduce) { .escape-action, .escape-action-arrow { transition: none; }.escape-reveal-enter-active, .escape-reveal-leave-active, .escape-action-icon { animation: none; } }
 .mon-page { min-height: 100vh; background: var(--bg-primary); color: var(--text-primary); display: flex; flex-direction: column; position: relative; overflow-x: hidden; }
 
 /* Static Gradient Background */
@@ -614,7 +639,7 @@ onUnmounted(() => {
 }
 
 /* Topbar */
-.mon-topbar { background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); padding: 0 24px; position: sticky; top: 0; z-index: 100; }
+.mon-topbar { background: var(--bg-primary); border-bottom: 1px solid var(--glass-border); padding: 0 24px; position: sticky; top: 0; z-index: 100; }
 .mon-inner { max-width: 1300px; margin: 0 auto; position: relative; z-index: 2; }
 .mon-inner.row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 .mon-topbar .mon-inner { display: flex; align-items: center; justify-content: space-between; height: 58px; }
@@ -624,11 +649,14 @@ onUnmounted(() => {
 .live-pill { display: flex; align-items: center; gap: 6px; font-size: 0.7rem; font-weight: 800; color: var(--risk-high); background: var(--risk-high-bg); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--risk-high); letter-spacing: .5px; }
 .live-dot { width: 7px; height: 7px; background: var(--risk-high); border-radius: 50%; animation: pulse 1.4s infinite; }
 .upd-time { font-size: 0.75rem; color: var(--text-muted); }
-.back-lnk { font-size: 0.8rem; color: var(--accent); text-decoration: none; font-weight: 600; }
-.back-lnk:hover { opacity: .7; }
+.back-lnk { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 1px solid var(--border-accent); border-radius: 9px; background: var(--bg-card); color: var(--text-primary); font-size: 0.82rem; line-height: 1.2; text-decoration: none; font-weight: 700; white-space: nowrap; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.back-lnk--route { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 3px 12px rgba(59, 130, 246, .22); }
+.back-lnk--route:hover { background: var(--accent-hover); border-color: var(--accent-hover); transform: translateY(-1px); }
+.back-lnk--home:hover { border-color: var(--accent); background: var(--bg-secondary); transform: translateY(-1px); }
+.back-lnk:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
 /* Filter bar */
-.mon-filter-bar { background: var(--glass-bg); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); padding: 10px 24px; position: relative; z-index: 2; }
+.mon-filter-bar { background: var(--bg-primary); border-bottom: 1px solid var(--glass-border); padding: 10px 24px; position: relative; z-index: 2; }
 .frow { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
 .f-sel { padding: 7px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-size: 0.85rem; }
 .fav-filter-btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); font-size: 0.82rem; cursor: pointer; transition: all 0.15s; font-family: inherit; }
@@ -653,7 +681,7 @@ onUnmounted(() => {
 .estado-count { font-size: 0.75rem; font-weight: 600; background: rgba(56, 189, 248, 0.1); color: var(--accent); padding: 2px 8px; border-radius: 20px; margin-left: 4px; border: 1px solid rgba(56, 189, 248, 0.2); }
 
 /* Rio Block */
-.rio-block { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg); }
+.rio-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-lg); }
 .rio-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid var(--border-light); }
 .rio-hdr.risk--high { border-left: 4px solid var(--risk-high); }
 .rio-hdr.risk--medium { border-left: 4px solid var(--risk-medium); }
@@ -670,16 +698,16 @@ onUnmounted(() => {
 .risk-chip.risk--high { background: rgba(239, 68, 68, 0.15); color: var(--risk-high); border: 1px solid rgba(239, 68, 68, 0.3); }
 .risk-chip.risk--medium { background: rgba(245, 158, 11, 0.15); color: var(--risk-medium); border: 1px solid rgba(245, 158, 11, 0.3); }
 .risk-chip.risk--low { background: rgba(16,185,129,.15); color: var(--risk-low); border: 1px solid rgba(16, 185, 129, 0.3); }
-.abtn { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all .2s; backdrop-filter: blur(4px); }
+.abtn { display: flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all .2s; }
 .abtn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-card-hover); }
 .abtn--fav { color: #F59E0B; border-color: #F59E0B; background: rgba(245,158,11,.08); }
 .abtn--alr { color: var(--accent); border-color: var(--accent); background: rgba(56, 189, 248, 0.1); }
-.abtn--disabled { 
-  background: var(--bg-card) !important; 
-  color: var(--text-muted) !important; 
-  border-color: var(--border-light) !important; 
-  opacity: 0.6; 
-  cursor: not-allowed !important; 
+.abtn--disabled {
+  background: var(--bg-card) !important;
+  color: var(--text-muted) !important;
+  border-color: var(--border-light) !important;
+  opacity: 0.6;
+  cursor: not-allowed !important;
 }
 .abtn--disabled:hover {
   transform: none !important;
@@ -777,8 +805,11 @@ onUnmounted(() => {
 }
 
 /* Chart Card — Glassmorphism */
-.chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); backdrop-filter: blur(10px); }
-.chart-card-hdr { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 22px; border-bottom: 1px solid var(--border-light); gap: 10px; }
+.chart-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); }
+.chart-card-hdr { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; padding: 18px 22px; border-bottom: 1px solid var(--border-light); gap: 10px; }
+.chart-card-heading { min-width: 0; flex: 1 1 230px; }
+.chart-card-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; max-width: 100%; }
+@media (max-width: 600px) { .chart-card-hdr { padding: 15px 12px; }.chart-card-actions { width: 100%; justify-content: flex-start; } }
 .chart-card-title { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 700; color: var(--text-primary); }
 .chart-card-sub { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 0.78rem; color: var(--text-muted); margin-top: 5px; }
 .nlv--alto { color: var(--risk-high); font-weight: 700; }
@@ -801,7 +832,7 @@ onUnmounted(() => {
   color: var(--text-muted); font-size: 0.82rem; opacity: 0.5;
 }
 
-.mon-footer { background: var(--glass-bg); backdrop-filter: blur(10px); border-top: 1px solid var(--glass-border); padding: 14px 24px; text-align: center; font-size: 0.73rem; color: var(--text-muted); position: relative; z-index: 2; }
+.mon-footer { background: var(--bg-primary); border-top: 1px solid var(--glass-border); padding: 14px 24px; text-align: center; font-size: 0.73rem; color: var(--text-muted); position: relative; z-index: 2; }
 
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.4)} }
 .spin { animation: spin .8s linear infinite; }
@@ -1039,4 +1070,9 @@ onUnmounted(() => {
 
 @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .upd-time { display: none; } .rio-hdr { flex-direction: column; } }
+@media (max-width: 700px) {
+  .mon-topbar .mon-inner { height: auto; min-height: 58px; padding: 10px 0; flex-wrap: wrap; gap: 10px; }
+  .mon-meta { width: 100%; flex-wrap: wrap; gap: 8px; }
+  .mon-meta .back-lnk { min-height: 44px; }
+}
 </style>

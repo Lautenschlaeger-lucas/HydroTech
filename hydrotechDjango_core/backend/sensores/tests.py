@@ -92,13 +92,13 @@ class SensorAPICompositeTests(TestCase):
         self.client = APIClient()
         self.usuario = Usuario.objects.create(
             nome='Usuário Comum',
-            email='comum@hidrotech.com',
+            email='sensor-test-1@example.org',
             senha='senha123',
             data_nascimento=date(1990, 1, 1),
         )
         self.defesa_civil = Usuario.objects.create(
             nome='Defesa Civil',
-            email='defesa@hidrotech.com',
+            email='sensor-test-2@example.org',
             senha='defesa123',
             data_nascimento=date(1985, 5, 5),
             is_defesa_civil=True,

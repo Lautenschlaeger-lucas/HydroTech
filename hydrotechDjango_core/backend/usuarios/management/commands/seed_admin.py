@@ -10,9 +10,13 @@ class Command(BaseCommand):
     help = 'Cria o usuário admin padrão (Defesa Civil) se não existir'
 
     def handle(self, *args, **options):
-        email = os.getenv('ADMIN_EMAIL', 'admin@hydrotech.com')
-        senha = os.getenv('ADMIN_PASSWORD', 'HydroTech@2026')
+        email = os.getenv('ADMIN_EMAIL', '').strip()
+        senha = os.getenv('ADMIN_PASSWORD', '')
         nome = os.getenv('ADMIN_NOME', 'Administrador HydroTech')
+
+        if not email or not senha:
+            self.stdout.write(self.style.WARNING('Admin não criado: configure ADMIN_EMAIL e ADMIN_PASSWORD no ambiente.'))
+            return
 
         if Usuario.objects.filter(email=email).exists():
             self.stdout.write(self.style.SUCCESS(f'Admin já existe: {email}'))
@@ -29,4 +33,4 @@ class Command(BaseCommand):
         user.set_password(senha)
         user.save()
 
-        self.stdout.write(self.style.SUCCESS(f'Admin criado: {email} / {senha}'))
+        self.stdout.write(self.style.SUCCESS(f'Admin criado: {email}'))

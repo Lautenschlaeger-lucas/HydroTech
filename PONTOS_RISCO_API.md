@@ -11,19 +11,7 @@ Sistema de criação e gerenciamento de pontos de risco de alagamento em rios. A
 
 ## Credenciais
 
-### Defesa Civil
-```
-Email: defesa_civil@hidrotech.com
-Senha: defesa123
-API Token: oLnZ7mM3O5-XRn-7kiN_FqhRRfYREC4u1SqX-O96YKY
-```
-
-### Admin
-```
-Username: admin
-Senha: admin123
-Email: admin@example.com
-```
+Use uma conta de teste criada localmente. Configure senhas e tokens em variáveis de ambiente; não publique credenciais reais neste guia.
 
 ## Endpoints
 
@@ -118,8 +106,8 @@ POST http://127.0.0.1:8000/auth/login/
 Content-Type: application/json
 
 {
-  "username": "defesa_civil@hidrotech.com",
-  "password": "defesa123"
+  "email": "seu-email-de-teste@example.com",
+  "senha": "sua-senha-de-teste"
 }
 ```
 

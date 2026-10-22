@@ -39,7 +39,7 @@
     </section>
 
     <!-- ═══ FEATURES (BENTO GRID) ═══ -->
-    <section class="features-section" @mousemove="handleMouseMove" :style="{ '--mouse-x': mouseX + 'px', '--mouse-y': mouseY + 'px' }">
+    <section class="features-section" @pointermove="handleFeaturePointerMove" @pointerleave="resetFeatureParallax">
       <div class="features-inner">
         <div class="features-header">
           <h2>Como o sistema protege sua região?</h2>
@@ -108,6 +108,31 @@ import { onMounted, onUnmounted, ref } from 'vue'
 
 const isLoggedIn = ref(!!localStorage.getItem('user_token'))
 const observer = ref(null)
+let parallaxFrame = null
+let featureElement = null
+let pointerX = 0
+let pointerY = 0
+
+const paintFeatureParallax = () => {
+  featureElement?.style.setProperty('--mouse-x', `${pointerX}px`)
+  featureElement?.style.setProperty('--mouse-y', `${pointerY}px`)
+  parallaxFrame = null
+}
+
+const handleFeaturePointerMove = (event) => {
+  if (event.pointerType === 'touch' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  featureElement = event.currentTarget
+  pointerX = (event.clientX - window.innerWidth / 2) * -0.05
+  pointerY = (event.clientY - window.innerHeight / 2) * -0.05
+  if (parallaxFrame === null) parallaxFrame = requestAnimationFrame(paintFeatureParallax)
+}
+
+const resetFeatureParallax = () => {
+  if (parallaxFrame !== null) cancelAnimationFrame(parallaxFrame)
+  parallaxFrame = null
+  featureElement?.style.setProperty('--mouse-x', '0px')
+  featureElement?.style.setProperty('--mouse-y', '0px')
+}
 
 onMounted(() => {
   observer.value = new IntersectionObserver((entries) => {
@@ -126,18 +151,11 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  resetFeatureParallax()
   if (observer.value) {
     observer.value.disconnect()
   }
 })
-
-const mouseX = ref(0)
-const mouseY = ref(0)
-
-const handleMouseMove = (e) => {
-  mouseX.value = (e.clientX - window.innerWidth / 2) * -0.05
-  mouseY.value = (e.clientY - window.innerHeight / 2) * -0.05
-}
 
 const services = ref([
   {
@@ -241,8 +259,13 @@ const audiences = ref([
   background: url('/hero_bg.png') no-repeat center center;
   background-size: cover;
   opacity: 0.7;
-  mix-blend-mode: overlay;
   pointer-events: none;
+}
+[data-theme='dark'] .hero::after {
+  background-image:
+    linear-gradient(90deg, rgba(2, 8, 18, 0.72), rgba(2, 8, 18, 0.58) 55%, rgba(2, 8, 18, 0.5)),
+    url('/hero_bg.png');
+  opacity: 1;
 }
 [data-theme='light'] .hero::after {
   opacity: 0.15;
@@ -450,7 +473,7 @@ const audiences = ref([
   mix-blend-mode: overlay;
   pointer-events: none;
   z-index: 0;
-  transform: translate(var(--mouse-x, 0), var(--mouse-y, 0));
+  transform: translate3d(var(--mouse-x, 0px), var(--mouse-y, 0px), 0);
   transition: transform 0.15s ease-out;
   will-change: transform;
 }

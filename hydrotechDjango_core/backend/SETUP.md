@@ -1,5 +1,7 @@
 # Guia de Setup e Deployment - Backend HydroTech
 
+> Para o fluxo atual de três serviços e `.env.example` local, consulte o [README principal](../../readme.md). As instruções abaixo são referências anteriores; Docker Compose exige `SECRET_KEY` e `POSTGRES_PASSWORD` configuradas no ambiente.
+
 ## 1. Setup Local (Desenvolvimento)
 
 ### Pré-requisitos

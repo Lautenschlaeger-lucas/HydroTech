@@ -1,4 +1,6 @@
-# 🎉 Backend HydroTech - Transformação Completa
+# Backend HydroTech — notas de implementação
+
+> Este é um protótipo acadêmico. Para executar a versão integrada atual, use o [README principal](../../readme.md) e o [handoff](../../docs/HANDOFF_BACKEND.md). As notas abaixo refletem etapas anteriores do projeto.
 
 ## O Que Foi Feito em Uma Olhada
 

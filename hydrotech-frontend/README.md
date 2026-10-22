@@ -1,38 +1,23 @@
-# hydrotech-vue
+﻿# HydroTech — frontend Vue
 
-This template should help get you started developing with Vue 3 in Vite.
+Interface do protótipo acadêmico HydroTech. Alertas, níveis e recomendações de rota são simulações; veja o [README principal](../readme.md) e o [handoff do backend](../docs/HANDOFF_BACKEND.md) para executar os três serviços.
 
-## Recommended IDE Setup
+## Desenvolvimento local
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+Requer Node.js 20.19+ ou 22.12+ e npm. Na pasta `hydrotech-frontend`:
 
-## Recommended Browser Setup
-
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
-
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
-
-```sh
-npm install
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+npm.cmd ci
+npm.cmd run dev
 ```
 
-### Compile and Hot-Reload for Development
+`VITE_API_URL` aponta para o Django e `VITE_ROTA_API_URL` para o FastAPI. As variáveis `VITE_*` ficam públicas no JavaScript do navegador; nunca coloque tokens ou senhas nelas. Reinicie o Vite após editá-las.
 
-```sh
-npm run dev
+Para conferir a compilação:
+
+```powershell
+npm.cmd run build
 ```
 
-### Compile and Minify for Production
-
-```sh
-npm run build
-```
+O build fica em `dist/`, que é ignorado pelo Git. O mapa usa recursos públicos de mapas; a rota de fuga depende do FastAPI separado.
