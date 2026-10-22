@@ -44,6 +44,36 @@ class RotasIntegradasTests(SimpleTestCase):
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(resposta.json()["alertas"], [1, 2])
 
+    def test_nao_calcula_rota_fora_da_area_de_risco(self):
+        async def zonas_mock(forcar=False):
+            return [{"id": 1, "lat": -22.9, "lng": -47.0, "raio_m": 300}]
+
+        with patch("rota_fuga.servico.carregar_zonas", zonas_mock), \
+                patch("rota_fuga.servico.area_mais_segura") as destinos:
+            resposta = self.client.get("/rota-fuga", {"lat": -23.0, "lng": -47.0})
+
+        self.assertEqual(resposta.status_code, 422)
+        self.assertIn("fora das áreas de risco", resposta.json()["detail"])
+        destinos.assert_not_called()
+
+    def test_nao_calcula_rota_sem_pontos_cadastrados(self):
+        async def zonas_mock(forcar=False):
+            return []
+
+        with patch("rota_fuga.servico.carregar_zonas", zonas_mock):
+            resposta = self.client.get("/rota-fuga", {"lat": -22.9, "lng": -47.0})
+
+        self.assertEqual(resposta.status_code, 422)
+
+    def test_falha_na_consulta_de_zonas_nao_gera_rota(self):
+        async def zonas_mock(forcar=False):
+            raise RuntimeError("Banco indisponível")
+
+        with patch("rota_fuga.servico.carregar_zonas", zonas_mock):
+            resposta = self.client.get("/rota-fuga", {"lat": -22.9, "lng": -47.0})
+
+        self.assertEqual(resposta.status_code, 503)
+
 
 class ZonasDoBancoTests(TestCase):
     def test_zonas_usa_banco_sem_servico_fastapi(self):

@@ -6,6 +6,8 @@ Esta integração usa os pontos fictícios já cadastrados no Django. A interfac
 
 Publique o backend Django atualizado no serviço Render existente. Ele passa a oferecer `/status`, `/zonas-risco` e `/rota-fuga`; `/zonas-risco` lê diretamente o PostgreSQL já usado pelo Django. Nenhum serviço FastAPI separado nem `HYDROTECH_API_URL` é necessário. No Render, `ORS_API_KEY` é opcional: sem ela, o OSRM público não garante desvio das zonas.
 
+A simulação só calcula uma rota quando a partida está dentro de uma das áreas de risco cadastradas (círculo de 300 m por padrão). Fora delas, o endpoint responde que não há rota de fuga para calcular; ele não inventa um destino para uma localização sem risco registrado.
+
 Na Vercel, configure `VITE_ROTA_API_URL=https://hydrotech-1.onrender.com` para Production e faça um novo deploy do frontend. `VITE_API_URL` deve apontar para o mesmo backend; se `VITE_ROTA_API_URL` estiver ausente, a tela de rotas reutiliza `VITE_API_URL`. Verifique `https://hydrotech-1.onrender.com/status` e `https://hydrotech-1.onrender.com/zonas-risco` antes de testar a tela.
 
 ## Executar localmente

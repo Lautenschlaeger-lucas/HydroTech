@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 AVISO_DENTRO = "A partida está dentro de uma área de risco simulada."
 
 
+class SemRiscoNaOrigem(Exception):
+    """A origem não está em nenhuma zona cadastrada para a simulação."""
+
+
 def filtrar_alertas(zonas, alertas):
     """
     Com `alertas` (ids que vêm no link do WhatsApp) só valem as zonas desses pontos.
@@ -119,20 +123,20 @@ async def planejar_fuga(lat, lng, modo="pe", alertas=None):
     try:
         todas = await carregar_zonas()
     except Exception as erro:
-        # HydroTech fora do ar não pode impedir ninguém de fugir
         logger.warning("Não deu para ler as zonas do HydroTech: %s", erro)
-        todas, avisos = [], ["Não foi possível consultar as áreas de risco do HydroTech agora."]
+        raise RotaIndisponivel("Não foi possível verificar as áreas de risco agora. Tente novamente.") from erro
 
     # O alerta identifica o ponto que motivou a abertura da tela, mas os demais
     # riscos cadastrados também precisam entrar no cálculo do trajeto.
     _, avisos_alerta = filtrar_alertas(todas, alertas)
     avisos += avisos_alerta
-    if not todas:
-        avisos.append("Não há pontos de risco disponíveis; a exposição do destino não pode ser avaliada.")
     zonas = [z for z in todas if geo.distancia_m(lat, lng, z["lat"], z["lng"]) <= config.DISTANCIA_MAX_ZONA_M]
     dentro = [z for z in zonas if geo.distancia_m(lat, lng, z["lat"], z["lng"]) <= z["raio_m"]]
-    if dentro:
-        avisos.insert(0, AVISO_DENTRO)
+    if not dentro:
+        raise SemRiscoNaOrigem(
+            "Sua partida está fora das áreas de risco simuladas cadastradas. Não há rota de fuga para calcular."
+        )
+    avisos.insert(0, AVISO_DENTRO)
     # A zona onde a pessoa já está não entra no desvio: ela precisa atravessá-la para sair
     zonas_desvio = [z for z in zonas if z not in dentro]
 
@@ -160,7 +164,7 @@ async def planejar_fuga(lat, lng, modo="pe", alertas=None):
             avisos.append("Desvio automático indisponível agora (limite do OpenRouteService); "
                           "a rota foi escolhida entre alternativas, sem garantia de evitar as áreas simuladas.")
         else:
-            avisos.append("Rota calculada sem desvio automático (configure ORS_API_KEY para ativar).")
+            avisos.append("Desvio automático não está ativo; o trajeto pode cruzar áreas de risco simuladas.")
 
     destino = melhor["destino"]
     destino["endereco"] = await nome_do_local(destino["lat"], destino["lng"])

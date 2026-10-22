@@ -9,7 +9,7 @@ from django.views.decorators.http import require_GET
 
 from . import config
 from .roteamento import RotaIndisponivel
-from .servico import filtrar_alertas, planejar_fuga
+from .servico import SemRiscoNaOrigem, filtrar_alertas, planejar_fuga
 from .zonas import carregar_zonas
 
 IDS_DE_ALERTA = re.compile(r"^\d+(,\d+)*$")
@@ -55,6 +55,8 @@ def rota_fuga(request):
 
     try:
         return JsonResponse(async_to_sync(calcular)())
+    except SemRiscoNaOrigem as erro:
+        return JsonResponse({"detail": str(erro)}, status=422)
     except RotaIndisponivel as erro:
         return JsonResponse({"detail": str(erro)}, status=503)
     except asyncio.TimeoutError:

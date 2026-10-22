@@ -42,13 +42,14 @@
           <strong>1. Escolha a partida</strong>
           <p v-if="origin" class="origin-help" role="status">Partida definida pelo {{ originSource }} · {{ origin.lat.toFixed(5) }}, {{ origin.lng.toFixed(5) }}</p>
           <p v-else class="origin-help">Use sua localização, marque qualquer lugar no mapa ou escolha um ponto para a demonstração.</p>
+          <p v-if="origin && !zonesLoading && zones.length && !originInsideRisk" class="origin-help" role="status">Sua partida está fora das áreas de risco simuladas. Não há rota de fuga para calcular.</p>
           <div class="origin-actions">
             <button type="button" class="secondary-button" :disabled="busy || zonesLoading || !!serviceError || !zones.length" @click="useGps">Usar minha localização</button>
             <button type="button" class="secondary-button" :class="{ 'secondary-button--active': choosingOnMap }" :disabled="busy || zonesLoading || !!serviceError || !zones.length" @click="chooseOnMap">{{ choosingOnMap ? 'Toque no mapa acima' : 'Escolher no mapa' }}</button>
           </div>
           <button type="button" class="demo-button" :disabled="busy || zonesLoading || !!serviceError || !zones.length" @click="simulateOrigin">Simular perto do ponto de risco</button>
         </div>
-        <button type="button" class="primary-button calculate-button" :disabled="busy || zonesLoading || !!serviceError || !zones.length || !origin" @click="findRoute">
+        <button type="button" class="primary-button calculate-button" :disabled="busy || zonesLoading || !!serviceError || !zones.length || !origin || !originInsideRisk" @click="findRoute">
           {{ busy ? 'Calculando...' : result ? 'Recalcular rota simulada' : '2. Calcular rota simulada' }}
         </button>
         <p v-if="routingStatus && !result" class="service-note">{{ routingStatus }}</p>
@@ -133,6 +134,11 @@ let focusCorrected = false
 function validCoords(lat, lng) {
   return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
 }
+
+const originInsideRisk = computed(() => origin.value && zones.value.some(zone => {
+  const lat = Number(zone.lat), lng = Number(zone.lng)
+  return validCoords(lat, lng) && L.latLng(origin.value.lat, origin.value.lng).distanceTo([lat, lng]) <= (Number(zone.raio_m) || 300)
+}))
 
 const focusLat = Number(route.query.foco_lat)
 const focusLng = Number(route.query.foco_lng)
@@ -314,6 +320,7 @@ function showRoute(data) {
 
 async function calculateRoute() {
   if (!origin.value || !zones.value.length || busy.value) return
+  if (!originInsideRisk.value) { autoRoutePending.value = false; return }
   requestController?.abort()
   const controller = new AbortController()
   requestController = controller
