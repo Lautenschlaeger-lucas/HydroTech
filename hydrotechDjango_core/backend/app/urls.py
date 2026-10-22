@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
+from rota_fuga.views import rota_fuga, zonas_risco, status as rota_status
 from usuarios.views import (
     UsuarioCreatedListView,
     UsuarioRetriveUpdateDestroyView,
@@ -24,6 +25,9 @@ from rios.views import (
 
 
 urlpatterns = [
+    path('rota-fuga', rota_fuga, name='rota-fuga'),
+    path('zonas-risco', zonas_risco, name='zonas-risco'),
+    path('status', rota_status, name='rota-status'),
     path('admin/', admin.site.urls),
     path('usuarios/', UsuarioCreatedListView.as_view(), name='usuario-list-create'),
     path('usuarios/<int:pk>/', UsuarioRetriveUpdateDestroyView.as_view(), name='usuario-detail-view'),

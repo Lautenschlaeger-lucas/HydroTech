@@ -99,7 +99,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 const route = useRoute()
-const serviceUrl = (import.meta.env.VITE_ROTA_API_URL || 'http://127.0.0.1:8100').replace(/\/$/, '')
+const serviceUrl = (import.meta.env.VITE_ROTA_API_URL || import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 const alertaId = computed(() => {
   const value = String(route.query.alerta || '')
   return /^\d+(,\d+)*$/.test(value) ? value : ''
@@ -189,7 +189,7 @@ async function loadZones(force = false) {
   try {
     const response = await fetch(`${serviceUrl}/zonas-risco${force ? '?atualizar=1' : ''}`)
     if (!response.ok) {
-      if (response.status === 502) throw new Error('O HydroTech não respondeu ao serviço de rotas. Confira se o backend está ativo e tente novamente.')
+      if (response.status === 502) throw new Error('Não foi possível consultar os pontos de risco no servidor. Tente novamente.')
       throw new Error(`Não foi possível carregar os pontos de risco (erro ${response.status}). Tente novamente.`)
     }
     const data = await response.json()
@@ -210,7 +210,7 @@ async function loadZones(force = false) {
   } catch (cause) {
     if (disposed || requestId !== zonesRequestId) return
     serviceError.value = cause instanceof TypeError
-      ? 'Serviço de rotas indisponível. Inicie o FastAPI na porta 8100 ou configure VITE_ROTA_API_URL.'
+      ? 'Serviço de rotas indisponível. Verifique a URL da API e tente novamente.'
       : cause.message
   } finally { if (!disposed && requestId === zonesRequestId) zonesLoading.value = false }
 }
@@ -332,7 +332,7 @@ async function calculateRoute() {
     showRoute(data)
   } catch (cause) {
     if (!disposed && cause.name !== 'AbortError') error.value = cause instanceof TypeError
-      ? 'Falha de comunicação com o serviço de rotas. Confira se o FastAPI está ligado.' : cause.message
+      ? 'Falha de comunicação com o servidor. Confira a URL da API.' : cause.message
   } finally { if (requestController === controller) { requestController = null; busy.value = false; autoRoutePending.value = false } }
 }
 

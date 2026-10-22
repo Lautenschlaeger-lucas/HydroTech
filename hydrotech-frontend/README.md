@@ -12,7 +12,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-`VITE_API_URL` aponta para o Django e `VITE_ROTA_API_URL` para o FastAPI. As variáveis `VITE_*` ficam públicas no JavaScript do navegador; nunca coloque tokens ou senhas nelas. Reinicie o Vite após editá-las.
+`VITE_API_URL` aponta para o Django. A tela de rotas usa essa mesma URL por padrão; `VITE_ROTA_API_URL` só é necessário se você quiser sobrescrevê-la. As variáveis `VITE_*` ficam públicas no JavaScript do navegador; nunca coloque tokens ou senhas nelas. Reinicie o Vite após editá-las.
 
 Para conferir a compilação:
 
@@ -20,4 +20,4 @@ Para conferir a compilação:
 npm.cmd run build
 ```
 
-O build fica em `dist/`, que é ignorado pelo Git. O mapa usa recursos públicos de mapas; a rota de fuga depende do FastAPI separado.
+O build fica em `dist/`, que é ignorado pelo Git. O mapa usa recursos públicos de mapas; as rotas de fuga são servidas pelo mesmo backend Django.

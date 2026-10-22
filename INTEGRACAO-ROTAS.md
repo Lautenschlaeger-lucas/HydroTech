@@ -1,6 +1,12 @@
 # Rotas de fuga simuladas no HydroTech
 
-Esta integração usa os pontos fictícios já cadastrados no Django. A interface Vue mostra círculos vermelhos de 300 m e chama o serviço FastAPI extraído de `hydrotech-rota-fuga-main.zip`. Os mapas, as ruas e a altitude podem vir de serviços externos reais, mas **nenhum alerta ou risco do HydroTech representa uma emergência real**.
+Esta integração usa os pontos fictícios já cadastrados no Django. A interface Vue mostra círculos vermelhos de 300 m e, em produção, chama os endpoints de rotas no próprio Django. O projeto FastAPI em `hydrotech-rota-fuga-main` continua disponível para testes separados. Os mapas, as ruas e a altitude podem vir de serviços externos reais, mas **nenhum alerta ou risco do HydroTech representa uma emergência real**.
+
+## Produção com um único serviço Render
+
+Publique o backend Django atualizado no serviço Render existente. Ele passa a oferecer `/status`, `/zonas-risco` e `/rota-fuga`; `/zonas-risco` lê diretamente o PostgreSQL já usado pelo Django. Nenhum serviço FastAPI separado nem `HYDROTECH_API_URL` é necessário. No Render, `ORS_API_KEY` é opcional: sem ela, o OSRM público não garante desvio das zonas.
+
+Na Vercel, configure `VITE_ROTA_API_URL=https://hydrotech-1.onrender.com` para Production e faça um novo deploy do frontend. `VITE_API_URL` deve apontar para o mesmo backend; se `VITE_ROTA_API_URL` estiver ausente, a tela de rotas reutiliza `VITE_API_URL`. Verifique `https://hydrotech-1.onrender.com/status` e `https://hydrotech-1.onrender.com/zonas-risco` antes de testar a tela.
 
 ## Executar localmente
 
@@ -57,7 +63,7 @@ O estado da simulação de enchente fica apenas na sessão do navegador. Não h�
 
 O cálculo considera todos os pontos de risco próximos, mesmo quando a URL inclui `alerta=ID`. O ID destaca o ponto que motivou a simulação. O destino é apenas potencialmente menos exposto pelos critérios de distância e altitude; não é abrigo nem garantia de segurança. Altitude e ruas dependem de serviços externos gratuitos e podem estar indisponíveis.
 
-Em celular, o navegador exige HTTPS para usar GPS, exceto em `localhost`. O toque no mapa funciona como origem simulada. Em uma implantação, configure `VITE_ROTA_API_URL` para a URL HTTPS pública do FastAPI e `HYDROTECH_API_URL` para a URL pública do Django. A chave ORS, quando usada, fica exclusivamente no ambiente do FastAPI.
+Em celular, o navegador exige HTTPS para usar GPS, exceto em `localhost`. O toque no mapa funciona como origem simulada. Na implantação atual, configure `VITE_ROTA_API_URL` com a URL HTTPS pública do Django. A chave ORS, quando usada, fica exclusivamente no ambiente do Render.
 
 ## Verificação
 

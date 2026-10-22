@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'usuarios',
     'rios',
     'sensores',
+    'rota_fuga',
 ]
 
 REST_FRAMEWORK = {
