@@ -6,10 +6,12 @@ from .views import (
     SensorGroupRetrieveUpdateDestroyView,
     LeituraListCreateView,
     LeituraRetrieveDestroyView,
+    PrevisaoPontoRiscoView,
 )
 
 
 urlpatterns = [
+    path('previsao/ponto-risco/<int:ponto_id>/', PrevisaoPontoRiscoView.as_view(), name='previsao-ponto-risco'),
     path('', SensorListCreateView.as_view(), name='sensor-list-create'),
     path('<int:pk>/', SensorRetrieveUpdateDestroyView.as_view(), name='sensor-detail'),
     path(

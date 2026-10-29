@@ -1,4 +1,9 @@
 from datetime import date
+from datetime import timedelta
+from django.utils import timezone
+from unittest.mock import patch
+from unittest import skipUnless
+import os
 
 from django.test import TestCase
 from rest_framework import status
@@ -6,6 +11,7 @@ from rest_framework.test import APIClient
 
 from usuarios.models import Usuario
 from .models import Sensor, SensorGroup, Leitura
+from .previsao import prever_sensor
 
 
 class CompositeSensorTests(TestCase):
@@ -32,6 +38,77 @@ class CompositeSensorTests(TestCase):
     def test_folha_retorna_apenas_si_mesma(self):
         self.assertEqual(self.sensor_nivel.get_sensores(), [self.sensor_nivel])
         self.assertEqual(self.sensor_nivel.get_tipo(), 'sensor')
+
+
+class PrevisaoHidrologicaTests(TestCase):
+    def setUp(self):
+        self.grupo_raiz = SensorGroup.objects.create(nome='Grupo teste', descricao='Grupo para regressão')
+        self.sensor_nivel = Sensor.objects.create(nome='Sensor nível regressão', tipo='nivel_agua', unidade='m')
+        self.sensor_vazao = Sensor.objects.create(nome='Sensor vazão regressão', tipo='vazao', unidade='m³/s')
+        self.usuario = Usuario.objects.create(nome='Equipe', email='equipe@example.com', senha='x', data_nascimento='2000-01-01', is_defesa_civil=True)
+        from rios.models import Rios, PontoRisco
+        self.rio = Rios.objects.create(nome='Rio Teste', cidade='Campinas', estado='SP', criado_por=self.usuario)
+        self.ponto = PontoRisco.objects.create(rio=self.rio, latitude=-22.9, longitude=-47.06, descricao='Ponte', limite_emergencia=3, criado_por=self.usuario)
+        self.sensor = Sensor.objects.create(nome='Nível teste', tipo='nivel_agua', unidade='m', rio=self.rio, latitude=-22.9, longitude=-47.06)
+
+    def adicionar_leituras(self, valores):
+        agora = timezone.now()
+        for minutos_atras, valor in valores:
+            leitura = Leitura.objects.create(sensor=self.sensor, valor=valor)
+            Leitura.objects.filter(pk=leitura.pk).update(criado_em=agora - timedelta(minutes=minutos_atras))
+
+    def test_tendencia_de_subida_estima_horizonte(self):
+        self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
+        resultado = prever_sensor(self.sensor.id, 3.0)
+        self.assertEqual(resultado['status'], 'estimavel')
+        self.assertEqual(resultado['estimativa_minutos'], 10)
+        self.assertIn(resultado['confianca'], ['baixa', 'moderada', 'alta'])
+
+    def test_sem_historico_nao_inventa_estimativa(self):
+        resultado = prever_sensor(self.sensor.id, 3.0)
+        self.assertEqual(resultado['status'], 'sem_dados')
+        self.assertIsNone(resultado['estimativa_minutos'])
+
+    def test_nivel_ja_critico_retorna_zero(self):
+        self.adicionar_leituras([(30, 2.0), (20, 2.2), (10, 2.5), (0, 3.1)])
+        resultado = prever_sensor(self.sensor.id, 3.0)
+        self.assertEqual(resultado['status'], 'critico')
+        self.assertEqual(resultado['estimativa_minutos'], 0)
+
+    def test_endpoint_associa_sensor_proximo_e_retorna_previsao(self):
+        self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
+        geracao = {'candidates': [{'content': {'parts': [{'text': '{"status":"estimavel","estimativa_minutos":10,"confianca":"moderada","tendencia":"subindo","justificativa":"A série mostra subida contínua."}'}]}}]}
+        with patch.dict('os.environ', {'GEMINI_API_KEY': 'test-key'}), patch('requests.Session.post') as post:
+            post.return_value.ok = True
+            post.return_value.json.return_value = geracao
+            resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()['sensor_id'], self.sensor.id)
+        self.assertEqual(resposta.json()['estimativa_minutos'], 10)
+        self.assertEqual(resposta.json()['provedor_previsao'], 'Gemini')
+        self.assertEqual(resposta.json()['analise_ia'], 'A série mostra subida contínua.')
+
+    def test_sem_chave_ia_nao_mostra_estimativa_local_como_previsao(self):
+        self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
+        with patch.dict('os.environ', {}, clear=True):
+            resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.json()['status'], 'ia_nao_configurada')
+        self.assertIsNone(resposta.json()['estimativa_minutos'])
+
+    def test_endpoint_sem_sensor_retorna_indisponibilidade_clara(self):
+        resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()['status'], 'sem_sensor')
+        self.assertIsNone(resposta.json()['estimativa_minutos'])
+
+    @skipUnless(os.getenv('HYDROTECH_LIVE_GEMINI') == '1', 'Teste online opt-in: defina HYDROTECH_LIVE_GEMINI=1')
+    def test_integracao_real_com_gemini(self):
+        self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
+        resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()['provedor_previsao'], 'Gemini')
+        self.assertIsInstance(resposta.json()['estimativa_minutos'], int)
+        self.assertGreaterEqual(resposta.json()['estimativa_minutos'], 0)
 
     def test_grupo_agrega_sensores_diretos(self):
         self.grupo_raiz.adicionar(self.sensor_nivel)

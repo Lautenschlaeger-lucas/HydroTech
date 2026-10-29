@@ -106,6 +106,20 @@
                     AO VIVO
                   </div>
                 </div>
+                <section class="forecast-card" :class="'forecast--' + (previsoes[ponto.id]?.status || 'carregando')" aria-live="polite">
+                  <div class="forecast-heading">
+                    <strong>Previsão até o limite crítico</strong>
+                    <span v-if="previsoes[ponto.id]?.confianca">Confiança {{ previsoes[ponto.id].confianca }}</span>
+                  </div>
+                  <p v-if="!previsoes[ponto.id]">Consultando as medições do sensor…</p>
+                  <template v-else>
+                    <p v-if="previsoes[ponto.id].estimativa_minutos !== null"><b>{{ formatarPrazo(previsoes[ponto.id].estimativa_minutos) }}</b> para o limite de emergência ({{ previsoes[ponto.id].limite_critico }} m).</p>
+                    <p v-else>{{ previsoes[ponto.id].mensagem }}</p>
+                    <small v-if="previsoes[ponto.id].sensor_nome">{{ previsoes[ponto.id].sensor_nome }} · {{ previsoes[ponto.id].distancia_sensor_km }} km · medido {{ formatarData(previsoes[ponto.id].medido_em) }}</small>
+                    <p v-if="previsoes[ponto.id].analise_ia" class="forecast-ai">✨ Gemini: {{ previsoes[ponto.id].analise_ia }}</p>
+                    <small v-else-if="previsoes[ponto.id].estimativa_minutos !== null">Previsão gerada por IA a partir da série medida; não é alerta oficial.</small>
+                  </template>
+                </section>
                 <div class="chart-canvas-wrap">
                   <div :ref="el => setObserverRef(el, ponto.id)" class="chart-observer">
                     <canvas v-if="visibleCharts.has(ponto.id)" :ref="el => setChartRef(el, ponto.id)"></canvas>
@@ -221,7 +235,28 @@ const loading = ref(true)
 const lastUpdate = ref('')
 const pontosPorRio = ref({})
 const todosPontos = ref([])
+const previsoes = ref({})
 const totalPontos = computed(() => todosPontos.value.length)
+
+const formatarPrazo = minutos => minutos < 60
+  ? `cerca de ${minutos} min`
+  : minutos < 1440
+    ? `cerca de ${Math.floor(minutos / 60)} h ${minutos % 60} min`
+    : `cerca de ${Math.floor(minutos / 1440)} dias`
+const formatarData = data => data ? new Date(data).toLocaleString('pt-BR') : 'horário indisponível'
+
+const carregarPrevisao = async ponto => {
+  try {
+    const resposta = await api.getPrevisaoPontoRisco(ponto.id)
+    previsoes.value[ponto.id] = resposta.data
+  } catch {
+    previsoes.value[ponto.id] = {
+      status: 'erro',
+      mensagem: 'Não foi possível consultar a previsão agora.',
+      estimativa_minutos: null,
+    }
+  }
+}
 
 const filtroEstado = ref('')
 watch(filtroEstado, () => {
@@ -287,6 +322,7 @@ const load = async () => {
     })
     const resultados = await Promise.all(promises)
     todosPontos.value = resultados.flat()
+    todosPontos.value.forEach(({ ponto }) => carregarPrevisao(ponto))
   } catch (err) {
     console.error('Erro ao carregar:', err)
   } finally {
@@ -551,6 +587,14 @@ onUnmounted(() => {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
 }
+
+.forecast-card { margin: 14px 22px 0; padding: 13px 16px; border: 1px solid rgba(100,116,139,.28); border-left: 4px solid #64748b; border-radius: 10px; background: rgba(100,116,139,.07); color: var(--text-primary); font-size: .84rem; line-height: 1.5; }
+.forecast--estimavel { border-left-color: #38bdf8; }
+.forecast--critico { border-left-color: #ef4444; background: rgba(239,68,68,.08); }
+.forecast-heading { display:flex; justify-content:space-between; gap:12px; margin-bottom:5px; }
+.forecast-heading span, .forecast-card small { color:var(--text-secondary); font-size:.73rem; }
+.forecast-card p { margin:4px 0; }
+.forecast-ai { color:var(--accent); }
 
 .chart-card-hdr {
   display: flex;
