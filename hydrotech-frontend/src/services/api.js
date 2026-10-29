@@ -150,6 +150,6 @@ export default {
     return apiClient.get(`/publico/rios/${rioId}/pontos-risco/`);
   },
   getPrevisaoPontoRisco(pontoId) {
-    return apiClient.get(`/sensores/previsao/ponto-risco/${pontoId}/`);
+    return apiClient.post(`/sensores/previsao/ponto-risco/${pontoId}/`);
   },
 };

@@ -108,16 +108,17 @@
                 </div>
                 <section class="forecast-card" :class="'forecast--' + (previsoes[ponto.id]?.status || 'carregando')" aria-live="polite">
                   <div class="forecast-heading">
-                    <strong>Previsão até o limite crítico</strong>
-                    <span v-if="previsoes[ponto.id]?.confianca">Confiança {{ previsoes[ponto.id].confianca }}</span>
+                    <strong>Previsão de risco</strong>
                   </div>
-                  <p v-if="!previsoes[ponto.id]">Consultando as medições do sensor…</p>
+                  <p v-if="!previsoes[ponto.id]">Calculando previsão…</p>
                   <template v-else>
-                    <p v-if="previsoes[ponto.id].estimativa_minutos !== null"><b>{{ formatarPrazo(previsoes[ponto.id].estimativa_minutos) }}</b> para o limite de emergência ({{ previsoes[ponto.id].limite_critico }} m).</p>
-                    <p v-else>{{ previsoes[ponto.id].mensagem }}</p>
-                    <small v-if="previsoes[ponto.id].sensor_nome">{{ previsoes[ponto.id].sensor_nome }} · {{ previsoes[ponto.id].distancia_sensor_km }} km · medido {{ formatarData(previsoes[ponto.id].medido_em) }}</small>
+                    <p v-if="previsoes[ponto.id].status === 'sem_risco'" class="forecast-status"><b>Sem risco identificado.</b> {{ previsoes[ponto.id].mensagem }}</p>
+                    <p v-else-if="previsoes[ponto.id].status === 'critico'" class="forecast-status"><b>Limite crítico atingido.</b> Nível atual: {{ previsoes[ponto.id].nivel_atual }} m.</p>
+                    <p v-else-if="previsoes[ponto.id].status === 'risco' && previsoes[ponto.id].estimativa_minutos !== null" class="forecast-status"><b>Risco identificado:</b> {{ formatarPrazo(previsoes[ponto.id].estimativa_minutos) }} até o limite crítico de {{ previsoes[ponto.id].limite_critico }} m.</p>
+                    <p v-else class="forecast-status">{{ previsoes[ponto.id].mensagem }}</p>
+                    <small v-if="previsoes[ponto.id].sensor_nome">{{ previsoes[ponto.id].sensor_nome }} · nível registrado {{ previsoes[ponto.id].nivel_atual }} m</small>
                     <p v-if="previsoes[ponto.id].analise_ia" class="forecast-ai">✨ Gemini: {{ previsoes[ponto.id].analise_ia }}</p>
-                    <small v-else-if="previsoes[ponto.id].estimativa_minutos !== null">Previsão gerada por IA a partir da série medida; não é alerta oficial.</small>
+                    <small v-else-if="previsoes[ponto.id].fonte_previsao === 'reserva_local'" class="forecast-fallback">{{ previsoes[ponto.id].mensagem_reserva || 'Estimativa local.' }}</small>
                   </template>
                 </section>
                 <div class="chart-canvas-wrap">
@@ -252,7 +253,7 @@ const carregarPrevisao = async ponto => {
   } catch {
     previsoes.value[ponto.id] = {
       status: 'erro',
-      mensagem: 'Não foi possível consultar a previsão agora.',
+      mensagem: 'Não foi possível gerar o cenário demonstrativo.',
       estimativa_minutos: null,
     }
   }
@@ -595,6 +596,10 @@ onUnmounted(() => {
 .forecast-heading span, .forecast-card small { color:var(--text-secondary); font-size:.73rem; }
 .forecast-card p { margin:4px 0; }
 .forecast-ai { color:var(--accent); }
+.forecast--risco { border-left-color: #f59e0b; background: rgba(245,158,11,.07); }
+.forecast--sem_risco { border-left-color: #22c55e; }
+.forecast-status b { color: var(--text-primary); }
+.forecast-fallback { display:block; margin-top:6px; color:#fbbf24 !important; }
 
 .chart-card-hdr {
   display: flex;

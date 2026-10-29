@@ -1,4 +1,10 @@
 import logging
+import os
+import json
+from math import radians, sin, cos, asin, sqrt
+
+from django.conf import settings
+from django.utils import timezone
 from rest_framework import generics, serializers
 from rest_framework.permissions import IsAuthenticated
 from .models import Sensor, SensorGroup, Leitura
@@ -11,6 +17,7 @@ from usuarios.authentication import JWTOrAPITokenAuthentication
 from usuarios.permissions import IsDefesaCivilOrAdmin
 from rios.models import PontoRisco
 from .previsao import prever_sensor
+from .simulacao import classificar_cenario_simulado, preparar_sensor_simulado
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
@@ -142,66 +149,161 @@ class LeituraRetrieveDestroyView(generics.RetrieveDestroyAPIView):
 
 
 class PrevisaoPontoRiscoView(APIView):
-    """Estimativa restrita à Defesa Civil e a administradores."""
+    """Previsão restrita à Defesa Civil/Admin, com demonstração resiliente."""
     authentication_classes = [JWTOrAPITokenAuthentication]
     permission_classes = [IsDefesaCivilOrAdmin]
 
-    def get(self, request, ponto_id):
-        from math import radians, sin, cos, asin, sqrt
-        from django.utils import timezone
+    def post(self, request, ponto_id):
         from datetime import timedelta
 
         ponto = PontoRisco.objects.select_related('rio').get(pk=ponto_id)
-        sensores = Sensor.objects.filter(rio_id=ponto.rio_id, tipo='nivel_agua', status='ativo')
-        candidatos = []
-        for sensor in sensores:
-            if sensor.latitude is None or sensor.longitude is None:
-                continue
-            dlat = radians(sensor.latitude - ponto.latitude)
-            dlon = radians(sensor.longitude - ponto.longitude)
-            a = sin(dlat / 2) ** 2 + cos(radians(ponto.latitude)) * cos(radians(sensor.latitude)) * sin(dlon / 2) ** 2
-            km = 6371 * 2 * asin(sqrt(a))
-            ultima = sensor.leituras.order_by('-criado_em').first()
-            if ultima and ultima.criado_em >= timezone.now() - timedelta(minutes=30):
-                candidatos.append((km, sensor, ultima))
-        candidatos.sort(key=lambda item: item[0])
-        if not candidatos or candidatos[0][0] > 10:
-            return Response({'status': 'sem_sensor', 'mensagem': 'Não há sensor de nível ativo com leitura recente em até 10 km deste ponto.', 'estimativa_minutos': None, 'confianca': 'insuficiente', 'ponto_id': ponto.id, 'limite_critico': ponto.limite_emergencia})
-        distancia, sensor, ultima = candidatos[0]
-        resultado = prever_sensor(sensor.id, ponto.limite_emergencia)
-        resultado.update({'ponto_id': ponto.id, 'ponto_descricao': ponto.descricao, 'rio_nome': ponto.rio.nome, 'distancia_sensor_km': round(distancia, 2)})
-        # A previsão numérica é produzida pelo Gemini com base nas medições reais.
-        import os
-        import requests
-        api_key = os.getenv('GEMINI_API_KEY')
-        if api_key:
-            from .models import Leitura
-            leituras = list(Leitura.objects.filter(sensor=sensor).order_by('-criado_em')[:24])
-            leituras.reverse()
-            historico = [{'minutos_antes_da_ultima': round((ultima.criado_em - item.criado_em).total_seconds() / 60, 2), 'nivel_m': item.valor} for item in leituras]
-            prompt = f'''Você é um modelo de previsão hidrológica de apoio à Defesa Civil. Analise somente a série de medições reais abaixo e estime, com cautela, o tempo até o nível atingir o limite de emergência. Responda exclusivamente JSON com as chaves: status ("estimavel", "critico", "estavel_ou_abaixando" ou "dados_insuficientes"), estimativa_minutos (inteiro ou null), confianca ("baixa", "moderada" ou "alta"), tendencia (texto curto em português), justificativa (até 2 frases). Não invente medições nem trate como alerta oficial. Se a série for curta, irregular, antiga ou contraditória, use dados_insuficientes e null.
-Rio: {ponto.rio.nome}; região: {ponto.descricao}; sensor: {sensor.nome}; unidade: {sensor.unidade}; limite crítico: {ponto.limite_emergencia} {sensor.unidade}; última medição UTC: {ultima.criado_em.isoformat()}; histórico do mais antigo ao mais novo: {historico}'''
-            try:
-                modelo = os.getenv('GEMINI_FORECAST_MODEL', 'gemini-3-flash-preview')
-                sessao = requests.Session()
-                # Em Windows, o proxy herdado pelo requests causava timeout; conexão direta validada.
-                sessao.trust_env = False
-                esquema = {'type': 'OBJECT', 'properties': {'status': {'type': 'STRING', 'enum': ['estimavel', 'critico', 'estavel_ou_abaixando', 'dados_insuficientes']}, 'estimativa_minutos': {'type': 'INTEGER', 'nullable': True}, 'confianca': {'type': 'STRING', 'enum': ['baixa', 'moderada', 'alta']}, 'tendencia': {'type': 'STRING'}, 'justificativa': {'type': 'STRING'}}, 'required': ['status', 'estimativa_minutos', 'confianca', 'tendencia', 'justificativa']}
-                resposta = sessao.post(f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent', headers={'x-goog-api-key': api_key, 'Connection': 'close'}, json={'contents': [{'parts': [{'text': prompt}]}], 'generationConfig': {'responseMimeType': 'application/json', 'responseSchema': esquema, 'maxOutputTokens': 2048}}, timeout=(5, 35))
-                if resposta.ok:
-                    import json
-                    geracao = json.loads(resposta.json()['candidates'][0]['content']['parts'][0]['text'])
-                    estados_validos = {'estimavel', 'critico', 'estavel_ou_abaixando', 'dados_insuficientes'}
-                    estimativa = geracao.get('estimativa_minutos')
-                    if geracao.get('status') not in estados_validos or (estimativa is not None and (not isinstance(estimativa, int) or estimativa < 0 or estimativa > 10080)):
-                        raise ValueError('Resposta estruturada fora dos limites esperados')
-                    resultado.update({'status': geracao['status'], 'estimativa_minutos': estimativa, 'confianca': geracao.get('confianca', 'baixa'), 'tendencia': geracao.get('tendencia', ''), 'analise_ia': geracao.get('justificativa', ''), 'modelo_ia': modelo, 'provedor_previsao': 'Gemini'})
-                else:
-                    logger.error('Gemini retornou HTTP %s: %s', resposta.status_code, resposta.text[:300])
-                    resultado.update({'status': 'ia_indisponivel', 'estimativa_minutos': None, 'confianca': 'insuficiente', 'provedor_previsao': None, 'mensagem': 'A IA não está disponível para gerar a previsão neste momento.'})
-            except (requests.RequestException, KeyError, IndexError, ValueError) as erro:
-                logger.warning('Falha na previsão hidrológica Gemini: %s', erro)
-                resultado.update({'status': 'ia_indisponivel', 'estimativa_minutos': None, 'confianca': 'insuficiente', 'provedor_previsao': None, 'mensagem': 'A IA não conseguiu gerar uma previsão válida neste momento.'})
+        simulado = settings.DEBUG
+
+        if simulado:
+            sensor = preparar_sensor_simulado(ponto)
+            classificacao_local = classificar_cenario_simulado(ponto)
+            distancia = 0.0
         else:
-            resultado.update({'status': 'ia_nao_configurada', 'estimativa_minutos': None, 'confianca': 'insuficiente', 'provedor_previsao': None, 'mensagem': 'Configure GEMINI_API_KEY para habilitar a previsão por IA.'})
-        return Response(resultado)
+            sensores = Sensor.objects.filter(
+                rio_id=ponto.rio_id,
+                tipo='nivel_agua',
+                status='ativo',
+            )
+            candidatos = []
+            for candidato in sensores:
+                if candidato.latitude is None or candidato.longitude is None:
+                    continue
+                dlat = radians(candidato.latitude - ponto.latitude)
+                dlon = radians(candidato.longitude - ponto.longitude)
+                a = sin(dlat / 2) ** 2 + cos(radians(ponto.latitude)) * cos(radians(candidato.latitude)) * sin(dlon / 2) ** 2
+                km = 6371 * 2 * asin(sqrt(a))
+                ultima_leitura = candidato.leituras.order_by('-criado_em').first()
+                if ultima_leitura and ultima_leitura.criado_em >= timezone.now() - timedelta(minutes=30):
+                    candidatos.append((km, candidato, ultima_leitura))
+            candidatos.sort(key=lambda item: item[0])
+            if not candidatos or candidatos[0][0] > 10:
+                return Response({
+                    'status': 'sem_sensor',
+                    'tem_risco': None,
+                    'mensagem': 'Não há sensor com leitura recente em até 10 km deste ponto.',
+                    'estimativa_minutos': None,
+                    'simulado': False,
+                    'ponto_id': ponto.id,
+                    'limite_critico': ponto.limite_emergencia,
+                })
+            distancia, sensor, _ = candidatos[0]
+            base = prever_sensor(sensor.id, ponto.limite_emergencia)
+            nivel = base.get('nivel_atual')
+            limite_atencao = float(ponto.limite_atencao)
+            limite_critico = float(ponto.limite_emergencia)
+            if nivel is not None and nivel >= limite_critico:
+                classificacao_local = {'status': 'critico', 'tem_risco': True, 'estimativa_minutos': 0}
+            elif nivel is not None and (nivel >= limite_atencao or base.get('status') == 'estimavel'):
+                classificacao_local = {'status': 'risco', 'tem_risco': True, 'estimativa_minutos': base.get('estimativa_minutos')}
+            else:
+                classificacao_local = {'status': 'sem_risco', 'tem_risco': False, 'estimativa_minutos': None}
+
+        calculo_base = prever_sensor(sensor.id, ponto.limite_emergencia)
+        if simulado:
+            calculo_base.update(classificacao_local)
+            calculo_base['confianca'] = 'demonstrativa'
+            calculo_base['mensagem'] = classificacao_local['mensagem']
+
+        resultado_base = {
+            **calculo_base,
+            **classificacao_local,
+            'simulado': simulado,
+            'fonte_previsao': 'reserva_local',
+            'ponto_id': ponto.id,
+            'ponto_descricao': ponto.descricao,
+            'rio_nome': ponto.rio.nome,
+            'limite_critico': ponto.limite_emergencia,
+            'distancia_sensor_km': round(distancia, 2),
+            'sensor_nome': sensor.nome,
+        }
+
+        api_key = os.getenv('GEMINI_API_KEY')
+        if not api_key:
+            resultado_base['mensagem_reserva'] = 'Estimativa local.'
+            return Response(resultado_base)
+
+        import requests
+
+        leituras = list(sensor.leituras.order_by('-criado_em')[:24])
+        leituras.reverse()
+        ultima = leituras[-1]
+        historico = [
+            {
+                'minutos_antes_da_ultima': round((ultima.criado_em - item.criado_em).total_seconds() / 60, 2),
+                'nivel_m': item.valor,
+            }
+            for item in leituras
+        ]
+        contexto_leitura = 'série demonstrativa' if simulado else 'medições do sensor'
+        prompt = f'''Você é um modelo de previsão hidrológica de apoio à Defesa Civil. Analise a série abaixo ({contexto_leitura}) e responda exclusivamente JSON com: status ("sem_risco", "risco" ou "critico"), estimativa_minutos (inteiro ou null), confianca ("baixa", "moderada" ou "alta"), tendencia (texto curto em português), justificativa (até 2 frases). Considere os limites de atenção e crítico. Se o nível atual já atingiu o limite crítico, use critico e 0. Se a série está abaixo da atenção e não projeta subida ao limite, use sem_risco e null. Se há tendência de subida em direção ao limite, use risco e estime o tempo. Redija a justificativa em tom formal e conciso, sem mencionar demonstrações, simulações ou alertas oficiais.
+Rio: {ponto.rio.nome}; região: {ponto.descricao}; sensor: {sensor.nome}; nível atual: {leituras[-1].valor} m; limite de atenção: {ponto.limite_atencao} m; limite crítico: {ponto.limite_emergencia} m; histórico do mais antigo ao mais novo: {historico}'''
+        try:
+            modelo = os.getenv('GEMINI_FORECAST_MODEL', 'gemini-3-flash-preview')
+            sessao = requests.Session()
+            sessao.trust_env = False
+            esquema = {
+                'type': 'OBJECT',
+                'properties': {
+                    'status': {'type': 'STRING', 'enum': ['sem_risco', 'risco', 'critico']},
+                    'estimativa_minutos': {'type': 'INTEGER', 'nullable': True},
+                    'confianca': {'type': 'STRING', 'enum': ['baixa', 'moderada', 'alta']},
+                    'tendencia': {'type': 'STRING'},
+                    'justificativa': {'type': 'STRING'},
+                },
+                'required': ['status', 'estimativa_minutos', 'confianca', 'tendencia', 'justificativa'],
+            }
+            resposta = sessao.post(
+                f'https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent',
+                headers={'x-goog-api-key': api_key, 'Connection': 'close'},
+                json={
+                    'contents': [{'parts': [{'text': prompt}]}],
+                    'generationConfig': {
+                        'responseMimeType': 'application/json',
+                        'responseSchema': esquema,
+                        'maxOutputTokens': 2048,
+                    },
+                },
+                timeout=(3, 8),
+            )
+            if not resposta.ok:
+                logger.warning('Gemini retornou HTTP %s; usando previsão local.', resposta.status_code)
+                resultado_base['mensagem_reserva'] = 'Estimativa local.'
+                return Response(resultado_base)
+
+            geracao = json.loads(resposta.json()['candidates'][0]['content']['parts'][0]['text'])
+            status_modelo = geracao.get('status')
+            estimativa = geracao.get('estimativa_minutos')
+            confianca = geracao.get('confianca')
+            tendencias_validas = {'sem_risco', 'risco', 'critico'}
+            confiancas_validas = {'baixa', 'moderada', 'alta'}
+            if status_modelo != classificacao_local['status']:
+                raise ValueError('Gemini classificou diferente do cenário simulado configurado')
+            if estimativa is not None and (isinstance(estimativa, bool) or not isinstance(estimativa, int) or not 0 <= estimativa <= 10080):
+                raise ValueError('Estimativa Gemini fora dos limites')
+            if status_modelo == 'risco' and (estimativa is None or estimativa <= 0):
+                raise ValueError('Gemini não estimou prazo para cenário de risco')
+            if status_modelo == 'critico' and estimativa != 0:
+                raise ValueError('Cenário crítico precisa retornar zero minutos')
+            if status_modelo == 'sem_risco' and estimativa is not None:
+                raise ValueError('Cenário sem risco não deve retornar prazo')
+            if status_modelo not in tendencias_validas or confianca not in confiancas_validas:
+                raise ValueError('Resposta Gemini fora do esquema esperado')
+
+            resultado_base.update({
+                'estimativa_minutos': estimativa,
+                'confianca': 'demonstrativa' if simulado else confianca,
+                'tendencia': geracao.get('tendencia', ''),
+                'analise_ia': geracao.get('justificativa', ''),
+                'fonte_previsao': 'Gemini',
+                'modelo_ia': modelo,
+            })
+        except (requests.RequestException, KeyError, IndexError, TypeError, ValueError) as erro:
+            logger.warning('Falha na previsão Gemini: %s; usando estimativa local.', erro)
+            resultado_base['mensagem_reserva'] = 'Estimativa local.'
+
+        return Response(resultado_base)

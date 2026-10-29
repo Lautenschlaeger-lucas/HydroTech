@@ -1,65 +1,17 @@
 import logging
-from datetime import timedelta
-from django.conf import settings
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Rios, PontoRisco
 from .serializers import RiosSerializer, PontoRiscoSerializer
-from sensores.models import Sensor, Leitura
+from sensores.simulacao import preparar_sensor_simulado
 from usuarios.authentication import JWTOrAPITokenAuthentication
 from usuarios.permissions import IsDefesaCivilAdminOrOwner
 
 logger = logging.getLogger(__name__)
-
-
-def criar_sensor_demonstrativo(ponto):
-    """Gera uma série curta e claramente simulada para apresentações locais."""
-    if not settings.DEBUG:
-        return
-
-    # Se já existe um sensor real de nível ativo neste rio, preservamos as
-    # medições dele. Pontos novos podem ter seu próprio sensor demonstrativo.
-    if Sensor.objects.filter(
-        rio=ponto.rio,
-        tipo='nivel_agua',
-        status='ativo',
-    ).exclude(modelo__icontains='SIMULADO').exists():
-        return
-
-    sensor = Sensor.objects.create(
-        nome=f'Sensor SIMULADO — {ponto.descricao}'[:100],
-        tipo='nivel_agua',
-        unidade='m',
-        status='ativo',
-        modelo='SIMULADO para apresentação; não é telemetria real',
-        latitude=ponto.latitude,
-        longitude=ponto.longitude,
-        rio=ponto.rio,
-    )
-
-    nivel_inicial = max(float(ponto.nivel_base), 0.0)
-    limite = float(ponto.limite_emergencia)
-    if nivel_inicial >= limite:
-        valores = [nivel_inicial] * 8
-    else:
-        passo = min(0.04, (limite - nivel_inicial) / 9)
-        valores = [
-            round(nivel_inicial + passo * indice, 3)
-            for indice in range(8)
-        ]
-    agora = timezone.now()
-    for indice, valor in enumerate(valores):
-        leitura = Leitura.objects.create(sensor=sensor, valor=valor)
-        # Os horários espaçados formam uma tendência demonstrativa; o nome do
-        # sensor deixa claro que não são horários/medições de telemetria real.
-        Leitura.objects.filter(pk=leitura.pk).update(
-            criado_em=agora - timedelta(minutes=7 - indice)
-        )
 
 
 class RiosListCreateView(generics.ListCreateAPIView):
@@ -164,7 +116,7 @@ class PontoRiscoListCreateView(generics.ListCreateAPIView):
         rio = get_object_or_404(Rios, pk=rio_id)
         with transaction.atomic():
             ponto = serializer.save(criado_por=self.request.user, rio=rio)
-            criar_sensor_demonstrativo(ponto)
+            preparar_sensor_simulado(ponto)
         logger.info(f'Novo ponto de risco criado: {rio.nome} por {self.request.user.email}')
 
 

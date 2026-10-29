@@ -1,6 +1,7 @@
 from datetime import date
 from datetime import timedelta
 from django.utils import timezone
+from django.test import override_settings
 from unittest.mock import patch
 from unittest import skipUnless
 import os
@@ -12,6 +13,7 @@ from rest_framework.test import APIClient
 from usuarios.models import Usuario
 from .models import Sensor, SensorGroup, Leitura
 from .previsao import prever_sensor
+from .simulacao import classificar_cenario_simulado, preparar_sensor_simulado
 
 
 class CompositeSensorTests(TestCase):
@@ -40,8 +42,10 @@ class CompositeSensorTests(TestCase):
         self.assertEqual(self.sensor_nivel.get_tipo(), 'sensor')
 
 
+@override_settings(DEBUG=True)
 class PrevisaoHidrologicaTests(TestCase):
     def setUp(self):
+        self.client = APIClient()
         self.grupo_raiz = SensorGroup.objects.create(nome='Grupo teste', descricao='Grupo para regressão')
         self.sensor_nivel = Sensor.objects.create(nome='Sensor nível regressão', tipo='nivel_agua', unidade='m')
         self.sensor_vazao = Sensor.objects.create(nome='Sensor vazão regressão', tipo='vazao', unidade='m³/s')
@@ -50,6 +54,7 @@ class PrevisaoHidrologicaTests(TestCase):
         self.rio = Rios.objects.create(nome='Rio Teste', cidade='Campinas', estado='SP', criado_por=self.usuario)
         self.ponto = PontoRisco.objects.create(rio=self.rio, latitude=-22.9, longitude=-47.06, descricao='Ponte', limite_emergencia=3, criado_por=self.usuario)
         self.sensor = Sensor.objects.create(nome='Nível teste', tipo='nivel_agua', unidade='m', rio=self.rio, latitude=-22.9, longitude=-47.06)
+        self.client.force_authenticate(user=self.usuario)
 
     def adicionar_leituras(self, valores):
         agora = timezone.now()
@@ -75,31 +80,147 @@ class PrevisaoHidrologicaTests(TestCase):
         self.assertEqual(resultado['status'], 'critico')
         self.assertEqual(resultado['estimativa_minutos'], 0)
 
+    @override_settings(DEBUG=False)
     def test_endpoint_associa_sensor_proximo_e_retorna_previsao(self):
         self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
-        geracao = {'candidates': [{'content': {'parts': [{'text': '{"status":"estimavel","estimativa_minutos":10,"confianca":"moderada","tendencia":"subindo","justificativa":"A série mostra subida contínua."}'}]}}]}
+        geracao = {'candidates': [{'content': {'parts': [{'text': '{"status":"risco","estimativa_minutos":10,"confianca":"moderada","tendencia":"subindo","justificativa":"A série mostra subida contínua."}'}]}}]}
         with patch.dict('os.environ', {'GEMINI_API_KEY': 'test-key'}), patch('requests.Session.post') as post:
             post.return_value.ok = True
             post.return_value.json.return_value = geracao
-            resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+            resposta = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(resposta.json()['sensor_id'], self.sensor.id)
+        self.assertEqual(resposta.json()['status'], 'risco')
+        self.assertTrue(resposta.json()['tem_risco'])
         self.assertEqual(resposta.json()['estimativa_minutos'], 10)
-        self.assertEqual(resposta.json()['provedor_previsao'], 'Gemini')
+        self.assertEqual(resposta.json()['fonte_previsao'], 'Gemini')
         self.assertEqual(resposta.json()['analise_ia'], 'A série mostra subida contínua.')
 
-    def test_sem_chave_ia_nao_mostra_estimativa_local_como_previsao(self):
+    def test_falha_do_gemini_usa_reserva_local(self):
+        self.ponto.nivel_base = self.ponto.limite_atencao
+        self.ponto.save(update_fields=['nivel_base'])
         self.adicionar_leituras([(30, 1.0), (20, 1.5), (10, 2.0), (0, 2.5)])
         with patch.dict('os.environ', {}, clear=True):
-            resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
-        self.assertEqual(resposta.json()['status'], 'ia_nao_configurada')
-        self.assertIsNone(resposta.json()['estimativa_minutos'])
-
-    def test_endpoint_sem_sensor_retorna_indisponibilidade_clara(self):
-        resposta = self.client.get(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+            resposta = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(resposta.json()['status'], 'sem_sensor')
+        self.assertEqual(resposta.json()['status'], 'risco')
+        self.assertEqual(resposta.json()['fonte_previsao'], 'reserva_local')
+        self.assertGreater(resposta.json()['estimativa_minutos'], 0)
+        self.assertEqual(resposta.json()['mensagem_reserva'], 'Estimativa local.')
+
+    def test_endpoint_sem_sensor_real_gera_cenario_simulado_automaticamente(self):
+        self.sensor.delete()
+        with patch.dict('os.environ', {'GEMINI_API_KEY': ''}):
+            resposta = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertTrue(resposta.json()['simulado'])
+        self.assertEqual(resposta.json()['status'], 'sem_risco')
+        self.assertFalse(resposta.json()['tem_risco'])
         self.assertIsNone(resposta.json()['estimativa_minutos'])
+        self.assertEqual(Sensor.objects.filter(rio=self.rio, modelo__icontains='SIMULADO').count(), 1)
+        self.assertEqual(Leitura.objects.filter(sensor__modelo__icontains='SIMULADO').count(), 8)
+
+    def test_cadastro_do_ponto_cria_sensor_simulado_e_leituras(self):
+        resposta = self.client.post(
+            f'/rios/{self.rio.id}/pontos-risco/',
+            {
+                'latitude': -22.91,
+                'longitude': -47.07,
+                'descricao': 'Ponte nova demonstrativa',
+                'rio': self.rio.id,
+                'nivel_base': 1.0,
+                'limite_atencao': 1.5,
+                'limite_alerta': 2.5,
+                'limite_emergencia': 3.0,
+            },
+            format='json',
+        )
+        self.assertEqual(resposta.status_code, 201)
+        ponto_id = resposta.data['id']
+        sensor = Sensor.objects.get(nome=f'Ponto de monitoramento {ponto_id}: Ponte nova demonstrativa')
+        self.assertEqual(Leitura.objects.filter(sensor=sensor).count(), 8)
+
+    def test_resposta_http_429_do_gemini_usa_reserva_local(self):
+        self.ponto.nivel_base = self.ponto.limite_atencao
+        self.ponto.save(update_fields=['nivel_base'])
+        with patch.dict('os.environ', {'GEMINI_API_KEY': 'test-key'}), patch('requests.Session.post') as post:
+            post.return_value.ok = False
+            post.return_value.status_code = 429
+            post.return_value.text = 'quota exceeded'
+            resposta = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.json()['fonte_previsao'], 'reserva_local')
+        self.assertEqual(resposta.json()['status'], 'risco')
+        self.assertGreater(resposta.json()['estimativa_minutos'], 0)
+
+    def test_simulacao_classifica_risco_com_prazo(self):
+        self.ponto.nivel_base = self.ponto.limite_atencao
+        self.ponto.save(update_fields=['nivel_base'])
+        cenario = classificar_cenario_simulado(self.ponto)
+        self.assertEqual(cenario['status'], 'risco')
+        self.assertTrue(cenario['tem_risco'])
+        self.assertGreater(cenario['estimativa_minutos'], 0)
+
+    def test_terceiro_ponto_do_rio_mostra_risco_na_demonstracao(self):
+        from rios.models import PontoRisco
+
+        segundo = PontoRisco.objects.create(
+            rio=self.rio,
+            latitude=-22.91,
+            longitude=-47.07,
+            descricao='Segundo ponto',
+            nivel_base=1.0,
+            limite_atencao=1.5,
+            limite_emergencia=3.0,
+            criado_por=self.usuario,
+        )
+        terceiro = PontoRisco.objects.create(
+            rio=self.rio,
+            latitude=-22.92,
+            longitude=-47.08,
+            descricao='Terceiro ponto',
+            nivel_base=1.0,
+            limite_atencao=1.5,
+            limite_emergencia=3.0,
+            criado_por=self.usuario,
+        )
+
+        self.assertEqual(classificar_cenario_simulado(self.ponto)['status'], 'sem_risco')
+        self.assertEqual(classificar_cenario_simulado(segundo)['status'], 'sem_risco')
+        previsao_terceiro = classificar_cenario_simulado(terceiro)
+        self.assertEqual(previsao_terceiro['status'], 'risco')
+        self.assertGreater(previsao_terceiro['estimativa_minutos'], 0)
+
+        sensor_terceiro = preparar_sensor_simulado(terceiro)
+        ultima_leitura = sensor_terceiro.leituras.order_by('-criado_em').first()
+        self.assertAlmostEqual(ultima_leitura.valor, terceiro.limite_atencao)
+
+    def test_simulacao_classifica_limite_critico(self):
+        self.ponto.nivel_base = self.ponto.limite_emergencia
+        self.ponto.save(update_fields=['nivel_base'])
+        cenario = classificar_cenario_simulado(self.ponto)
+        self.assertEqual(cenario['status'], 'critico')
+        self.assertEqual(cenario['estimativa_minutos'], 0)
+
+    def test_leituras_simuladas_sao_renovadas(self):
+        sensor = preparar_sensor_simulado(self.ponto)
+        antiga = Leitura.objects.filter(sensor=sensor).order_by('-criado_em').first()
+        Leitura.objects.filter(pk=antiga.pk).update(criado_em=timezone.now() - timedelta(hours=3))
+        preparar_sensor_simulado(self.ponto)
+        renovada = Leitura.objects.filter(sensor=sensor).order_by('-criado_em').first()
+        self.assertLess((timezone.now() - renovada.criado_em).total_seconds(), 60)
+        self.assertEqual(Leitura.objects.filter(sensor=sensor).count(), 8)
+
+    def test_endpoint_de_previsao_exige_defesa_civil(self):
+        self.client.force_authenticate(user=None)
+        resposta_anonima = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertIn(resposta_anonima.status_code, (401, 403))
+        self.client.force_authenticate(user=Usuario.objects.create(
+            nome='Cidadão', email='cidadao@example.com', senha='x',
+            data_nascimento='2000-01-01', is_defesa_civil=False,
+        ))
+        resposta_publico = self.client.post(f'/sensores/previsao/ponto-risco/{self.ponto.id}/')
+        self.assertEqual(resposta_publico.status_code, 403)
 
     @skipUnless(os.getenv('HYDROTECH_LIVE_GEMINI') == '1', 'Teste online opt-in: defina HYDROTECH_LIVE_GEMINI=1')
     def test_integracao_real_com_gemini(self):
