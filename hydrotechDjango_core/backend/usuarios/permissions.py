@@ -30,7 +30,11 @@ class IsDefesaCivilAdminOrOwner(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         if request.method in ['PUT', 'PATCH', 'DELETE']:
-            return obj.criado_por.id == request.user.id or getattr(request.user, 'is_staff', False)
+            return (
+                obj.criado_por.id == request.user.id
+                or getattr(request.user, 'is_staff', False)
+                or getattr(request.user, 'is_defesa_civil', False)
+            )
         return True
 
 
