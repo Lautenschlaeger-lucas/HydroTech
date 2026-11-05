@@ -173,15 +173,15 @@
             <input v-model="pontoForm.nivel_base" type="number" step="0.1" placeholder="Ex: 1,0" />
           </div>
           <div class="form-group">
-            <label>Baixo (m)</label>
+            <label>Observação (m)</label>
             <input v-model="pontoForm.limite_atencao" type="number" step="0.1" placeholder="Ex: 1,5" />
           </div>
           <div class="form-group">
-            <label>Médio (m)</label>
+            <label>Início de “Atenção” (m)</label>
             <input v-model="pontoForm.limite_alerta" type="number" step="0.1" placeholder="Ex: 2,5" />
           </div>
           <div class="form-group">
-            <label>Alto (m)</label>
+            <label>Início de “Perigo” (m)</label>
             <input v-model="pontoForm.limite_emergencia" type="number" step="0.1" placeholder="Ex: 3,5" />
           </div>
         </div>

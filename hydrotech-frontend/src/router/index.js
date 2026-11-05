@@ -44,9 +44,21 @@ const router = createRouter({
       component: () => import('@/views/MonitoramentoView.vue')
     },
     {
+      // Fora de qualquer menu: controle da simulação para a apresentação
+      path: '/simulador',
+      name: 'simulador',
+      component: () => import('@/views/SimuladorView.vue')
+    },
+    {
       path: '/rota-de-fuga',
       name: 'rota-de-fuga',
       component: () => import('@/views/RotaFugaView.vue')
+    },
+    {
+      // Qualquer endereço que não existe
+      path: '/:pathMatch(.*)*',
+      name: 'nao-encontrado',
+      component: () => import('@/views/NaoEncontradoView.vue')
     }
   ]
 })
