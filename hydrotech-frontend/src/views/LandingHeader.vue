@@ -15,7 +15,7 @@
       <!-- Desktop Nav -->
       <nav class="nav" :class="{ 'nav--open': mobileOpen }">
         <!-- Minha Conta removido do centro -->
-        <a v-if="!isMinimalNav" href="#servicos" class="nav-link" @click="closeMobile">Serviços Institucionais</a>
+        <a v-if="!isMinimalNav" href="#servicos" class="nav-link" @click="closeMobile">Serviços</a>
         <a v-if="!isMinimalNav" href="#contingencia" class="nav-link" @click="closeMobile">Quem pode usar?</a>
 
         <!-- Botão para Monitoramento Público na página Minha Conta -->
@@ -26,6 +26,14 @@
           </svg>
           Acessar Monitoramento Público
         </router-link>
+
+        <!-- Atalhos principais (menu do celular) -->
+        <template v-if="mobileOpen">
+          <router-link to="/monitoramento" class="nav-link" @click="closeMobile">Seu rio</router-link>
+          <router-link to="/rota-de-fuga" class="nav-link" @click="closeMobile">Rota de fuga</router-link>
+          <router-link v-if="isLoggedIn" to="/minha-conta" class="nav-link" @click="closeMobile">Minha conta</router-link>
+          <router-link v-if="isLoggedIn && isAdmin" to="/dashboard" class="nav-link" @click="closeMobile">Painel Admin</router-link>
+        </template>
 
         <!-- Mobile-only auth -->
         <div class="nav-mobile-auth" v-if="mobileOpen">
@@ -81,6 +89,7 @@
 </template>
 
 <script setup>
+import { temaAtual } from '@/composables/tema'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -93,7 +102,7 @@ const userName = ref(localStorage.getItem('user_name') || 'Usuário')
 const isAdmin = ref(false)
 const mobileOpen = ref(false)
 const isScrolled = ref(false)
-const theme = ref(localStorage.getItem('theme') || 'dark')
+const theme = ref(temaAtual())
 
 const checkAdmin = () => {
   try {
@@ -131,14 +140,17 @@ const logout = () => {
   router.push('/')
 }
 
+const sincronizarTema = () => { theme.value = temaAtual() }
+
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 10
 }
 
 onMounted(() => {
-  theme.value = localStorage.getItem('theme') || 'dark'
+  theme.value = temaAtual()
   document.documentElement.setAttribute('data-theme', theme.value)
   window.addEventListener('storage-update', checkLogin)
+  window.addEventListener('theme-changed', sincronizarTema)
   window.addEventListener('storage', checkLogin)
   window.addEventListener('scroll', handleScroll, { passive: true })
   handleScroll()
@@ -148,6 +160,7 @@ onUnmounted(() => {
   window.removeEventListener('storage-update', checkLogin)
   window.removeEventListener('storage', checkLogin)
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('theme-changed', sincronizarTema)
 })
 </script>
 
@@ -436,6 +449,7 @@ onUnmounted(() => {
 /* Responsive */
 @media (max-width: 768px) {
   .hamburger { display: flex; }
+  .btn-admin { display: none; }
 
   .nav {
     position: fixed;

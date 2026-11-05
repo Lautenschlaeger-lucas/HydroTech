@@ -16,6 +16,11 @@
       </div>
     </template>
 
+    <!-- ── BARE LAYOUT (simulador da apresentação) ── -->
+    <main v-else-if="isBareRoute" class="bare-main">
+      <RouterView />
+    </main>
+
     <!-- ── PUBLIC LAYOUT (landing, login, registro, monitoramento) ── -->
     <template v-else>
       <LandingHeader />
@@ -26,7 +31,10 @@
           </Transition>
         </RouterView>
       </main>
-      <LandingFooter />
+      <LandingFooter v-if="route.path !== '/rota-de-fuga'" />
+      <!-- Atalho de emergência (celular) + espaço para ele não cobrir o fim da página -->
+      <FabRotaFuga />
+      <div v-if="route.path !== '/rota-de-fuga'" class="fab-space" aria-hidden="true"></div>
     </template>
 
     <!-- Global Overlays -->
@@ -36,6 +44,7 @@
 </template>
 
 <script setup>
+import { aplicarTema, acompanharTemaDoAparelho } from '@/composables/tema'
 import { ref, onMounted, provide, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -45,6 +54,7 @@ import AppTopNav from '@/components/AppTopNav.vue'
 import AppSidebar from '@/components/AppSidebar.vue'
 import ToastNotification from '@/components/ToastNotification.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
+import FabRotaFuga from '@/components/FabRotaFuga.vue'
 
 const route = useRoute()
 const toastRef = ref(null)
@@ -53,6 +63,9 @@ const modalRef = ref(null)
 // Authenticated app routes → show sidebar + topnav
 const APP_ROUTES = ['/dashboard', '/rios', '/usuarios']
 const isAppRoute = computed(() => APP_ROUTES.includes(route.path))
+
+// Telas sem cabeçalho/rodapé
+const isBareRoute = computed(() => route.path === '/simulador')
 
 // Full-width public routes (no container padding)
 const isFullWidthRoute = computed(() =>
@@ -72,8 +85,8 @@ provide('modal', {
 })
 
 onMounted(() => {
-  const theme = localStorage.getItem('theme') || 'dark'
-  document.documentElement.setAttribute('data-theme', theme)
+  aplicarTema()
+  acompanharTemaDoAparelho()
 })
 </script>
 
@@ -98,6 +111,10 @@ onMounted(() => {
   padding: 32px 36px;
   overflow-y: auto;
 }
+
+.bare-main { flex: 1; }
+.fab-space { display: none; }
+@media (max-width: 768px) { .fab-space { display: block; height: 88px; } }
 
 /* ── Public Layout ── */
 .public-main {
@@ -135,7 +152,7 @@ onMounted(() => {
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .app-main { padding: 20px 16px; }
+  .app-main { padding: 20px 16px calc(96px + env(safe-area-inset-bottom)); }
 }
 </style>
 

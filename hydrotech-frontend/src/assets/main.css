@@ -2,7 +2,6 @@
    HydroTech — Design System v2  (Dark Navy)
    ═══════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* ── Tokens ── */
 :root {
@@ -25,8 +24,8 @@
 
   /* Text */
   --text-primary:   #F1F5F9;
-  --text-secondary: #8AA6C1;
-  --text-muted:     #4F6D8A;
+  --text-secondary: #A3B8CD;
+  --text-muted:     #7F99B4;   /* ≥ 4.5:1 sobre os cards (WCAG AA) */
   --text-dim:       #2A4A6A;
 
   /* Brand / Accent */
@@ -52,6 +51,28 @@
   --risk-medium-bg: rgba(217, 119, 6, 0.15);
   --risk-high:      #DC2626;
   --risk-high-bg:   rgba(220, 38, 38, 0.12);
+
+  /* Risk text (legível sobre o fundo do tema) */
+  --risk-low-text:    #34D399;
+  --risk-medium-text: #FBBF24;
+  --risk-high-text:   #F87171;
+  --risk-medium-solid:#F59E0B;
+
+  /* Água / informação */
+  --water:      #38BDF8;
+  --water-soft: rgba(56, 189, 248, 0.14);
+  --on-accent:  #FFFFFF;
+
+  /* Escala tipográfica */
+  --fs-xs:  0.8125rem;  /* mínimo de 13px para leitura no celular */
+  --fs-sm:  0.875rem;
+  --fs-md:  1rem;
+  --fs-lg:  1.25rem;
+  --fs-xl:  1.75rem;
+  --fs-2xl: 2.5rem;
+
+  /* Alvo de toque mínimo (celular) */
+  --tap: 48px;
 
   /* Surfaces & Borders */
   --card-bg:       #0F2036;
@@ -86,6 +107,7 @@
 
   /* Layout */
   --topnav-height: 60px;
+  --landing-header-h: 60px;
   --sidebar-width: 220px;
   --max-width: 1400px;
 
@@ -314,7 +336,8 @@ tbody tr:last-child td { border-bottom: none; }
 
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  table { font-size: 0.82rem; }
+  /* Tabelas largas rolam na horizontal em vez de cortar colunas */
+  table { font-size: 0.82rem; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   th, td { padding: 10px 12px; }
 }
 [data-theme='light'] {
@@ -333,7 +356,7 @@ tbody tr:last-child td { border-bottom: none; }
   --bg-elevated: #FFFFFF;
   --text-primary: #0F172A;
   --text-secondary: #334155;
-  --text-muted: #64748B;
+  --text-muted: #5B6B80;
   --text-dim: #94A3B8;
   --accent: #0284C7;
   --accent-hover: #0369A1;
@@ -366,4 +389,62 @@ tbody tr:last-child td { border-bottom: none; }
   --shadow-glow: 0 0 15px rgba(2, 132, 199, 0.15);
   --glass-bg: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.05);
+  --risk-low-text: #047857;
+  --risk-medium-text: #B45309;
+  --risk-high-text: #B91C1C;
+  --risk-medium-solid: #D97706;
+  --water: #0284C7;
+  --water-soft: rgba(2, 132, 199, 0.1);
+}
+
+/* ═══ Componentes base ═══ */
+
+/* Botões */
+.btn {
+  min-height: var(--tap);
+  padding: 0 20px;
+  border-radius: var(--radius-lg);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { transform: translateY(-1px); }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn--danger  { background: var(--emergency); color: #fff; }
+.btn--danger:hover:not(:disabled) { background: var(--emergency-hover); }
+.btn--ghost   { background: transparent; border-color: var(--border); color: var(--text-primary); }
+.btn--ghost:hover:not(:disabled) { border-color: var(--border-accent); background: var(--accent-soft); }
+.btn--lg      { min-height: 60px; font-size: var(--fs-lg); padding: 0 28px; border-radius: var(--radius-xl); }
+.btn--sm      { min-height: 38px; padding: 0 14px; font-size: var(--fs-sm); border-radius: var(--radius-md); }
+.btn--block   { width: 100%; }
+
+/* Status de risco: sempre cor + ícone + texto (nunca só cor) */
+.risk-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  border-radius: var(--radius-full);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.risk-pill svg { flex-shrink: 0; }
+.risk-pill--baixo { background: var(--risk-low-bg);    color: var(--risk-low-text); }
+.risk-pill--medio { background: var(--risk-medium-bg); color: var(--risk-medium-text); }
+.risk-pill--alto  { background: var(--risk-high-bg);   color: var(--risk-high-text); }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
