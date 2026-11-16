@@ -4,19 +4,28 @@
     <!-- ═══ HERO ═══ -->
     <section class="hero">
       <div class="hero-inner">
-        <span class="hero-badge">MONITORAMENTO EM TEMPO REAL &amp; ANÁLISES</span>
-        <h1 class="hero-title">HydroTech: Proteção e<br>Resiliência em sua cidade</h1>
+        <span class="hero-badge">MONITORAMENTO DE ENCHENTES</span>
+        <h1 class="hero-title">Veja se o rio perto de você <br>está seguro</h1>
         <p class="hero-subtitle">
-          Monitoramento contínuo em tempo real e sistema avançado de
-          alertas para a segurança e bem-estar, a segurança da população e a
-          preservação da infraestrutura urbana contra riscos hidrológicos.
+          O HydroTech acompanha o nível dos rios da sua cidade e avisa quando há risco de enchente.
+          Se houver perigo, mostra o caminho mais seguro para sair.
         </p>
+        <router-link v-if="pontosEmAlerta.length" :to="{ path: '/rota-de-fuga', query: { ponto: pontosEmAlerta[0].id } }" class="hero-alert" role="alert">
+          <RiskIcon nivel="alto" :size="20" />
+          <span><strong>Perigo de enchente</strong> · {{ pontosEmAlerta[0].descricao }}</span>
+          <b>Rota de fuga →</b>
+        </router-link>
         <div class="hero-actions">
-          <router-link to="/monitoramento" class="btn-hero-primary">
-            ACESSAR MONITORAMENTO PÚBLICO
+          <router-link :to="{ path: '/monitoramento', query: { perto: 1 } }" class="btn btn--primary btn--lg hero-cta">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" /><circle cx="12" cy="10" r="3" /></svg>
+            Ver o rio da minha região
           </router-link>
-          <a href="#servicos" class="btn-hero-secondary">SAIBA MAIS</a>
+          <router-link to="/rota-de-fuga" class="btn btn--danger btn--lg hero-cta">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="19" r="2.5" /><circle cx="18" cy="5" r="2.5" /><path d="M8.5 19H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5" /></svg>
+            Rota de fuga
+          </router-link>
         </div>
+        <a href="#servicos" class="hero-more">Saiba mais sobre o HydroTech ↓</a>
       </div>
     </section>
 
@@ -24,15 +33,17 @@
     <section id="servicos" class="services-section">
       <div class="services-inner">
         <div class="services-header">
-          <h2>Serviços Institucionais</h2>
-          <p>Acesse rapidamente os canais de atendimento, infraestrutura de segurança e documentação oficial para gestores e cidadãos.</p>
+          <h2>Serviços</h2>
+          <p>Atendimento, abrigos e informações da Defesa Civil em um só lugar.</p>
         </div>
         <div class="services-grid">
           <div class="service-card" v-for="(s, i) in services" :key="i">
             <div class="service-icon" v-html="s.icon"></div>
             <h3>{{ s.title }}</h3>
             <p>{{ s.desc }}</p>
-            <a v-if="s.linkText" :href="s.link || '#'" class="service-link">{{ s.linkText }} <span class="arrow">→</span></a>
+            <!-- Só vira link quando houver um destino real; até lá, fica marcado como "Em breve" -->
+            <a v-if="s.link && s.link !== '#'" :href="s.link" class="service-link">{{ s.linkText || 'Acessar' }} <span class="arrow">→</span></a>
+            <span v-else class="service-soon">Em breve</span>
           </div>
         </div>
       </div>
@@ -42,8 +53,8 @@
     <section class="features-section" @pointermove="handleFeaturePointerMove" @pointerleave="resetFeatureParallax">
       <div class="features-inner">
         <div class="features-header">
-          <h2>Como o sistema protege sua região?</h2>
-          <p>Tecnologia de ponta integrada a protocolos práticos para o sistema de hidrológicas</p>
+          <h2>Como o HydroTech protege sua região?</h2>
+          <p>Sensores, previsão do tempo e alertas trabalhando juntos.</p>
         </div>
         <div class="bento-grid">
           <div class="bento-card bento-sm" v-for="(f, i) in features.slice(0,2)" :key="'a'+i">
@@ -94,9 +105,9 @@
     <!-- ═══ CTA ═══ -->
     <section class="cta-section">
       <div class="cta-inner">
-        <h2>Pronto para proteger sua região?</h2>
-        <p>Implemente o HydroTech em seu município e garanta uma gestão de recursos hídricos moderna e eficiente para a comunidade.</p>
-        <router-link :to="isLoggedIn ? '/minha-conta' : '/registro'" class="btn-cta">{{ isLoggedIn ? 'Minha Conta' : 'Começar Agora' }}</router-link>
+        <h2>Receba alertas da sua região</h2>
+        <p>Crie sua conta grátis e seja avisado quando o rio perto de você subir.</p>
+        <router-link :to="isLoggedIn ? '/minha-conta' : '/registro'" class="btn-cta">{{ isLoggedIn ? 'Minha conta' : 'Criar conta grátis' }}</router-link>
       </div>
     </section>
 
@@ -105,6 +116,10 @@
 
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue'
+import RiskIcon from '@/components/RiskIcon.vue'
+import { useNiveis } from '@/composables/useNiveis'
+
+const { carregar: carregarNiveis, pontosEmAlerta } = useNiveis()
 
 const isLoggedIn = ref(!!localStorage.getItem('user_token'))
 const observer = ref(null)
@@ -135,6 +150,7 @@ const resetFeatureParallax = () => {
 }
 
 onMounted(() => {
+  carregarNiveis()
   observer.value = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -160,25 +176,25 @@ onUnmounted(() => {
 const services = ref([
   {
     title: 'Atendimento e Consulta',
-    desc: 'Solicite vistorias, consulte processos e tire dúvidas sobre áreas de risco.',
+    desc: 'Peça vistorias e tire dúvidas sobre áreas de risco.',
     link: '#',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>'
   },
   {
     title: 'Abrigos',
-    desc: 'Localização em tempo real e capacidade dos abrigos públicos disponíveis.',
+    desc: 'Onde ficam os abrigos públicos e quantas vagas têm.',
     link: '#',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>'
   },
   {
     title: 'Histórico',
-    desc: 'Repositório de dados históricos de ocorrências e níveis dos rios.',
+    desc: 'Enchentes e níveis dos rios em anos anteriores.',
     link: '#',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>'
   },
   {
-    title: 'Plano de Contingência',
-    desc: 'Documentação técnica e protocolos de ação para cenários de risco.',
+    title: 'Plano de Emergência',
+    desc: 'O que fazer antes, durante e depois de uma enchente.',
     link: '#',
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="24" height="24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>'
   }
@@ -187,27 +203,27 @@ const services = ref([
 const features = ref([
   {
     title: 'Sensores',
-    desc: 'Rede de sensores alimentados a painéis solares, monitorando o nível do rio em tempo real via batimetria.',
+    desc: 'Medem o nível do rio o tempo todo, com energia solar.',
     icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6 8-2-2"/><path d="m18 8 2-2"/><path d="m6 16-2 2"/><path d="m18 16 2 2"/><path d="M12 2v2"/><path d="M12 20v2"/><circle cx="12" cy="12" r="4"/></svg>'
   },
   {
-    title: 'Dados Meteorológicos',
-    desc: 'Integração direta com sistemas meteorológicos e satélites para previsão de precipitação e clima em tempo real.',
+    title: 'Previsão do tempo',
+    desc: 'Acompanha a chuva prevista para antecipar o risco.',
     icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>'
   },
   {
     title: 'Análise de Risco',
-    desc: 'IA e ML de alta precisão, combinando variáveis e modelos para detecção e probabilidade de transbordamentos.',
+    desc: 'Inteligência artificial estima a chance de o rio transbordar e quanto tempo falta.',
     icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>'
   },
   {
-    title: 'Dashboard Interativo',
-    desc: 'Interface rica para gerenciamento e acompanhamento completo das monitorações e da região em tempo real.',
+    title: 'Painel da Defesa Civil',
+    desc: 'Todos os rios e pontos de risco em tempo real para quem coordena a resposta.',
     icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>'
   },
   {
-    title: 'Alertas no Painel',
-    desc: 'Sistema automático de lançamento para alertas oficiais ao público em caso de alertas e emergências.',
+    title: 'Alertas automáticos',
+    desc: 'Avisos no site e no WhatsApp quando o risco aumenta.',
     icon: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
   }
 ])
@@ -217,20 +233,20 @@ const audiences = ref([
     title: 'Gestores Públicos',
     icon: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     items: [
-      'Somando ao controle máximo com métricas poderosas',
-      'Gestão de equipes de fiscalização e defesa civil',
-      'Relatórios automatizados para tomada de decisões',
-      'Configuração de gatilhos oficiais SMS e e-mail'
+      'Visão de todos os rios e pontos de risco',
+      'Organização das equipes da Defesa Civil',
+      'Relatórios para apoiar decisões',
+      'Alertas automáticos por WhatsApp'
     ]
   },
   {
     title: 'Cidadãos',
     icon: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
     items: [
-      'Mapa público de monitoramento dos rios',
-      'Cadastro prático e informativo de alertas locais',
-      'Com interface simplificada para acesso rápido',
-      'Contatos de serviços sociais e emergências'
+      'Ver o nível do rio perto de casa',
+      'Receber alertas da sua região',
+      'Rota de fuga em poucos toques',
+      'Contatos de emergência: 199 e 193'
     ]
   }
 ])
@@ -256,7 +272,7 @@ const audiences = ref([
   content: '';
   position: absolute;
   inset: 0;
-  background: url('/hero_bg.png') no-repeat center center;
+  background: url('/hero_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.7;
   pointer-events: none;
@@ -264,7 +280,7 @@ const audiences = ref([
 [data-theme='dark'] .hero::after {
   background-image:
     linear-gradient(90deg, rgba(2, 8, 18, 0.72), rgba(2, 8, 18, 0.58) 55%, rgba(2, 8, 18, 0.5)),
-    url('/hero_bg.png');
+    url('/hero_bg.webp');
   opacity: 1;
 }
 [data-theme='light'] .hero::after {
@@ -333,6 +349,20 @@ const audiences = ref([
     transform: translateY(0);
   }
 }
+
+.hero-cta { flex: 1 1 260px; max-width: 340px; }
+.hero-more { display: inline-block; margin-top: 18px; font-size: var(--fs-sm); color: var(--text-secondary); text-decoration: none; opacity: 0; animation: fadeInUp 0.8s ease-out 0.5s forwards; }
+.hero-more:hover { color: var(--text-primary); }
+.hero-alert {
+  display: flex; align-items: center; gap: 10px; margin-top: 24px; padding: 12px 16px;
+  border-radius: var(--radius-lg); background: var(--emergency); color: #fff; text-decoration: none; max-width: 560px;
+}
+.hero-alert span { flex: 1; font-size: var(--fs-sm); }
+.hero-alert b { white-space: nowrap; }
+@media (max-width: 768px) {
+  .hero-cta { flex: none; width: 100%; max-width: none; }
+}
+
 
 .btn-hero-primary {
   display: inline-flex;
@@ -451,6 +481,12 @@ const audiences = ref([
   transition: gap 0.2s;
 }
 .service-link:hover { gap: 10px; }
+.service-soon {
+  display: inline-flex; align-self: flex-start; margin-top: 4px;
+  padding: 3px 10px; border-radius: var(--radius-full);
+  background: var(--bg-elevated); color: var(--text-muted);
+  font-size: var(--fs-xs); font-weight: 700; letter-spacing: .03em;
+}
 .service-link .arrow { transition: transform 0.2s; }
 
 /* ═══ FEATURES (BENTO) ═══ */
@@ -467,7 +503,7 @@ const audiences = ref([
   height: 110%;
   top: -5%;
   left: -5%;
-  background: url('/features_bg.png') no-repeat center center;
+  background: url('/features_bg.webp') no-repeat center center;
   background-size: cover;
   opacity: 0.3;
   mix-blend-mode: overlay;
@@ -706,9 +742,12 @@ const audiences = ref([
 }
 
 @media (max-width: 768px) {
-  .hero { padding: 80px 20px 60px; }
+  .hero { padding: 36px 20px 40px; }
   .hero-inner { margin-left: 0; }
-  .hero-title { font-size: 2.2rem; }
+  .hero-title { font-size: 1.9rem; }
+  .hero-title br { display: none; }
+  .hero-subtitle { font-size: var(--fs-sm); }
+  .hero-badge { font-size: 0.62rem; letter-spacing: .08em; }
   .hero-actions { flex-direction: column; }
   .services-grid { grid-template-columns: 1fr; }
   .bento-grid { grid-template-columns: 1fr; }

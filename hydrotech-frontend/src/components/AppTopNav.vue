@@ -61,6 +61,7 @@
 </template>
 
 <script setup>
+import { temaAtual } from '@/composables/tema'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -68,7 +69,7 @@ const route = useRoute()
 const router = useRouter()
 const userMenuOpen = ref(false)
 const userName = ref(localStorage.getItem('user_name') || 'Usuário')
-const theme = ref(localStorage.getItem('theme') || 'dark')
+const theme = ref(temaAtual())
 
 const toggleTheme = () => {
   const newTheme = theme.value === 'light' ? 'dark' : 'light'
@@ -79,7 +80,7 @@ const toggleTheme = () => {
 }
 
 const syncTheme = () => {
-  theme.value = localStorage.getItem('theme') || 'dark'
+  theme.value = temaAtual()
 }
 
 const userInitials = computed(() => {

@@ -27,6 +27,21 @@
       </div>
     </div>
 
+    <!-- Atalho para o simulador (só na área logada, o público não vê) -->
+    <section class="sim-card" aria-labelledby="sim-card-titulo">
+      <span class="sim-card-ico" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7c-3.3 4-6 7.5-6 11.3a6 6 0 0 0 12 0c0-3.8-2.7-7.3-6-11.3z"/><path d="M9 15a3 3 0 0 0 3 3"/></svg>
+      </span>
+      <div class="sim-card-txt">
+        <h2 id="sim-card-titulo">Simulador de enchente <span class="sim-card-tag">Treinamento</span></h2>
+        <p>Mude o nível dos rios para Normal, Atenção ou Perigo e veja o site do público reagir. Abre numa nova aba deste navegador.</p>
+      </div>
+      <router-link to="/simulador" target="_blank" rel="noopener" class="btn btn--primary sim-card-btn">
+        Abrir simulador
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      </router-link>
+    </section>
+
     <!-- Filter Bar -->
     <div class="filter-bar">
       <div class="filter-row">
@@ -101,10 +116,7 @@
                       {{ rio.nome }} · {{ ponto.descricao.length > 45 ? ponto.descricao.substring(0,45)+'…' : ponto.descricao }}
                     </p>
                   </div>
-                  <div class="live-badge">
-                    <span class="live-dot"></span>
-                    AO VIVO
-                  </div>
+                  <RiskPill :risco="statusDe(ponto)" />
                 </div>
                 <section class="forecast-card" :class="'forecast--' + (previsoes[ponto.id]?.status || 'carregando')" aria-live="polite">
                   <div class="forecast-heading">
@@ -121,15 +133,7 @@
                     <small v-else-if="previsoes[ponto.id].fonte_previsao === 'reserva_local'" class="forecast-fallback">{{ previsoes[ponto.id].mensagem_reserva || 'Estimativa local.' }}</small>
                   </template>
                 </section>
-                <div class="chart-canvas-wrap">
-                  <div :ref="el => setObserverRef(el, ponto.id)" class="chart-observer">
-                    <canvas v-if="visibleCharts.has(ponto.id)" :ref="el => setChartRef(el, ponto.id)"></canvas>
-                    <div v-else class="chart-placeholder">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                      <span>Rolar para carregar gráfico</span>
-                    </div>
-                  </div>
-                </div>
+                <div class="chart-body"><RiverChart :ponto="ponto" :altura="200" sem-risco /></div>
               </div>
             </div>
           </div>
@@ -141,95 +145,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import api from '../services/api'
-import Chart from 'chart.js/auto'
+import RiverChart from '@/components/RiverChart.vue'
+import RiskPill from '@/components/RiskPill.vue'
+import { useNiveis, garantirSerie } from '@/composables/useNiveis'
 
-const chartCanvases = ref({})
-let chartInstances = {}
-let chartLevels = {}
-let chartInterval = null
-
-const setChartRef = (el, id) => {
-  if (el) chartCanvases.value[id] = el
-  else delete chartCanvases.value[id]
-}
-
-const visibleCharts = ref(new Set())
-let chartObserver = null
-
-const setObserverRef = (el, pontoId) => {
-  if (!el) return
-  if (!chartObserver) {
-    chartObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const id = Number(entry.target.dataset.pontoId)
-          visibleCharts.value = new Set([...visibleCharts.value, id])
-          chartObserver.unobserve(entry.target)
-          const todo = todosPontos.value.find(({ ponto }) => ponto.id === id)
-          if (todo) buildChart(todo.ponto)
-        }
-      })
-    }, { rootMargin: '100px' })
-  }
-  el.dataset.pontoId = pontoId
-  chartObserver.observe(el)
-}
-
-const buildChart = (ponto) => {
-  const canvas = chartCanvases.value[ponto.id]
-  if (!canvas || chartInstances[ponto.id]) return
-  const ctx = canvas.getContext('2d')
-  const nivelColor = '#38bdf8'
-  const gradient = ctx.createLinearGradient(0, 0, 0, 220)
-  gradient.addColorStop(0, nivelColor + '40')
-  gradient.addColorStop(1, nivelColor + '05')
-  const baseMap = { 1: 0.8, 2: 1.4, 3: 2.0 }
-  const base = (ponto.nivel_base !== null && ponto.nivel_base !== undefined)
-    ? parseFloat(ponto.nivel_base)
-    : (baseMap[ponto.nivel_risco] || 1.0)
-  const variance = 0.25
-  const data = Array.from({ length: 15 }, () =>
-    (base + (Math.random() * variance * 2 - variance)).toFixed(2)
-  )
-  const labels = Array.from({ length: 15 }, (_, i) => {
-    const d = new Date()
-    d.setSeconds(d.getSeconds() - (15 - i) * 10)
-    return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  })
-  const atencao = (ponto.limite_atencao !== null && ponto.limite_atencao !== undefined)
-    ? parseFloat(ponto.limite_atencao) : +(base + 0.5).toFixed(2)
-  const alerta = (ponto.limite_alerta !== null && ponto.limite_alerta !== undefined)
-    ? parseFloat(ponto.limite_alerta) : +(base + 0.85).toFixed(2)
-  const emergencia = (ponto.limite_emergencia !== null && ponto.limite_emergencia !== undefined)
-    ? parseFloat(ponto.limite_emergencia) : +(base + 1.2).toFixed(2)
-  chartLevels[ponto.id] = { base, variance, emergenciaLevel: parseFloat(emergencia) }
-
-  chartInstances[ponto.id] = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        { label: 'Altura do Rio', data, borderColor: nivelColor, backgroundColor: gradient, borderWidth: 2, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: nivelColor, pointBorderColor: 'transparent', fill: true, tension: 0.4 },
-        { label: 'Alto', data: Array(15).fill(emergencia), borderColor: '#ef4444', borderWidth: 1, borderDash: [5, 4], pointRadius: 0, fill: false },
-        { label: 'Médio', data: Array(15).fill(alerta), borderColor: '#f59e0b', borderWidth: 1, borderDash: [5, 4], pointRadius: 0, fill: false },
-        { label: 'Baixo', data: Array(15).fill(atencao), borderColor: '#4ade80', borderWidth: 1, borderDash: [5, 4], pointRadius: 0, fill: false }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: {
-        legend: { display: true, position: 'top', labels: { usePointStyle: true, color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(), font: { size: 10 }, boxWidth: 8 } },
-        tooltip: { backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-elevated').trim() || '#0D1B2E', titleColor: getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim(), bodyColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(), borderColor: 'rgba(0,0,0,0.08)', borderWidth: 1, padding: 10 }
-      },
-      scales: {
-        y: { suggestedMin: 0, grid: { color: 'rgba(100,116,139,0.1)' }, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(), font: { size: 10 } } },
-        x: { grid: { display: false }, ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim(), maxTicksLimit: 15, font: { size: 10 } } }
-      }
-    }
-  })
-}
+const { statusDe, ultimaAtualizacao } = useNiveis()
 
 const rios = ref([])
 const loading = ref(true)
@@ -260,12 +182,6 @@ const carregarPrevisao = async ponto => {
 }
 
 const filtroEstado = ref('')
-watch(filtroEstado, () => {
-  Object.values(chartInstances).forEach(c => c.destroy())
-  chartInstances = {}
-  chartLevels = {}
-  visibleCharts.value = new Set()
-})
 
 const estadosList = computed(() =>
   [...new Set(rios.value.map(r => r.estado))].filter(Boolean).sort()
@@ -283,27 +199,9 @@ const riosPorEstado = computed(() => {
   return map
 })
 
-const tick = () => {
-  const newLabel = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  Object.entries(chartInstances).forEach(([pontoId, chart]) => {
-    const levels = chartLevels[pontoId]
-    if (!levels) return
-    const ds = chart.data.datasets[0]
-    let v = parseFloat(ds.data.slice(-1)[0]) + (Math.random() * levels.variance * 2 - levels.variance)
-    v = Math.max(Math.max(0, levels.base - 0.6), Math.min(levels.emergenciaLevel + 0.2, v))
-    chart.data.labels.push(newLabel)
-    ds.data.push(v.toFixed(2))
-    chart.data.datasets[1].data.push(chart.data.datasets[1].data[0])
-    chart.data.datasets[2].data.push(chart.data.datasets[2].data[0])
-    chart.data.datasets[3].data.push(chart.data.datasets[3].data[0])
-    if (chart.data.labels.length > 15) {
-      chart.data.labels.shift()
-      chart.data.datasets.forEach(d => d.data.shift())
-    }
-    chart.update('none')
-  })
-  lastUpdate.value = newLabel
-}
+watch(ultimaAtualizacao, t => {
+  if (t) lastUpdate.value = new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+})
 
 const load = async () => {
   loading.value = true
@@ -323,26 +221,16 @@ const load = async () => {
     })
     const resultados = await Promise.all(promises)
     todosPontos.value = resultados.flat()
-    todosPontos.value.forEach(({ ponto }) => carregarPrevisao(ponto))
+    todosPontos.value.forEach(({ ponto }) => { garantirSerie(ponto); carregarPrevisao(ponto) })
   } catch (err) {
     console.error('Erro ao carregar:', err)
   } finally {
     loading.value = false
     lastUpdate.value = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    await nextTick()
-    if (todosPontos.value.length > 0) {
-      chartInterval = setInterval(tick, 10000)
-    }
   }
 }
 
 onMounted(() => load())
-onUnmounted(() => {
-  if (chartInterval) clearInterval(chartInterval)
-  if (chartObserver) chartObserver.disconnect()
-  Object.values(chartInstances).forEach(c => c.destroy())
-  chartLevels = {}
-})
 </script>
 
 <style scoped>
@@ -413,6 +301,35 @@ onUnmounted(() => {
   color: var(--risk-high);
 }
 .header-stat--live strong { color: var(--risk-high); font-size: 0.78rem; }
+
+/* Atalho do simulador */
+.sim-card {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+}
+.sim-card-ico {
+  width: 44px; height: 44px; flex-shrink: 0;
+  display: grid; place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft); color: var(--accent);
+}
+.sim-card-txt { flex: 1; min-width: 0; }
+.sim-card-txt h2 { font-size: var(--fs-md); font-weight: 800; color: var(--text-primary); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sim-card-txt p { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: 2px; }
+.sim-card-tag {
+  font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+  padding: 2px 8px; border-radius: var(--radius-full);
+  background: var(--risk-medium-bg); color: var(--risk-medium-text);
+}
+.sim-card-btn { flex-shrink: 0; gap: 8px; }
+@media (max-width: 640px) {
+  .sim-card { flex-wrap: wrap; padding: 16px; }
+  .sim-card-ico { display: none; }
+  .sim-card-btn { width: 100%; justify-content: center; }
+}
 
 /* Filter Bar */
 .filter-bar {
@@ -491,18 +408,18 @@ onUnmounted(() => {
   font-weight: 800;
   color: var(--text-primary);
   padding-bottom: 8px;
-  border-bottom: 2px solid rgba(56, 189, 248, 0.4);
+  border-bottom: 2px solid var(--border-accent);
 }
 
 .estado-count {
   font-size: 0.75rem;
   font-weight: 600;
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--water-soft);
   color: var(--accent);
   padding: 2px 8px;
   border-radius: 20px;
   margin-left: 4px;
-  border: 1px solid rgba(56, 189, 248, 0.2);
+  border: 1px solid var(--border-accent);
 }
 
 /* Rio Block */
@@ -589,17 +506,17 @@ onUnmounted(() => {
   border-radius: var(--radius-xl);
 }
 
-.forecast-card { margin: 14px 22px 0; padding: 13px 16px; border: 1px solid rgba(100,116,139,.28); border-left: 4px solid #64748b; border-radius: 10px; background: rgba(100,116,139,.07); color: var(--text-primary); font-size: .84rem; line-height: 1.5; }
-.forecast--estimavel { border-left-color: #38bdf8; }
-.forecast--critico { border-left-color: #ef4444; background: rgba(239,68,68,.08); }
+.forecast-card { margin: 14px 22px 0; padding: 13px 16px; border: 1px solid var(--border); border-left: 4px solid var(--text-muted); border-radius: 10px; background: var(--bg-tertiary); color: var(--text-primary); font-size: .84rem; line-height: 1.5; }
+.forecast--estimavel { border-left-color: var(--water); }
+.forecast--critico { border-left-color: var(--risk-high); background: var(--risk-high-bg); }
 .forecast-heading { display:flex; justify-content:space-between; gap:12px; margin-bottom:5px; }
 .forecast-heading span, .forecast-card small { color:var(--text-secondary); font-size:.73rem; }
 .forecast-card p { margin:4px 0; }
 .forecast-ai { color:var(--accent); }
-.forecast--risco { border-left-color: #f59e0b; background: rgba(245,158,11,.07); }
-.forecast--sem_risco { border-left-color: #22c55e; }
+.forecast--risco { border-left-color: var(--risk-medium-solid); background: var(--risk-medium-bg); }
+.forecast--sem_risco { border-left-color: var(--risk-low); }
 .forecast-status b { color: var(--text-primary); }
-.forecast-fallback { display:block; margin-top:6px; color:#fbbf24 !important; }
+.forecast-fallback { display:block; margin-top:6px; color: var(--risk-medium-text); }
 
 .chart-card-hdr {
   display: flex;
@@ -686,8 +603,14 @@ onUnmounted(() => {
 }
 
 /* Responsive */
+.chart-body { padding: 16px 22px 20px; }
+@media (min-width: 1200px) { .charts-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 768px) {
   .page-header { flex-direction: column; align-items: flex-start; }
   .header-right { flex-wrap: wrap; }
+  .page-title { font-size: var(--fs-xl); }
+  .chart-card-hdr { padding: 14px 16px; }
+  .forecast-card { margin: 12px 16px 0; }
+  .chart-body { padding: 12px 16px 16px; }
 }
 </style>

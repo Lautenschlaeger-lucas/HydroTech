@@ -212,4 +212,22 @@ const route = useRoute()
   background: var(--bg-elevated);
   transform: none;
 }
+
+/* Celular: vira barra de navegação inferior */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; top: auto; bottom: 0; left: 0; right: 0; z-index: 900;
+    width: 100%; height: auto; min-height: 0;
+    border-right: 0; border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+    overflow: visible;
+  }
+  .sidebar-header, .sidebar-spacer { display: none; }
+  .sidebar-nav { flex-direction: row; padding: 6px; gap: 4px; }
+  .sidebar-link {
+    flex: 1; flex-direction: column; justify-content: center; gap: 4px;
+    min-height: 56px; padding: 6px 4px; font-size: 0.7rem; text-align: center; line-height: 1.2;
+  }
+  .sidebar-link--active { box-shadow: none; }
+}
 </style>

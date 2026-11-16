@@ -12,8 +12,8 @@
           <span class="footer-brand-text">HydroTech</span>
         </div>
         <p class="footer-desc">
-          © {{ currentYear }} HydroTech Standardised Monitoring Authority Official
-          Government Portal.
+          © {{ currentYear }} HydroTech · Projeto acadêmico de Sistemas de Informação (FHO).
+          Em emergência, ligue <b>199</b> (Defesa Civil) ou <b>193</b> (Bombeiros).
         </p>
       </div>
 
